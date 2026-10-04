@@ -1,5 +1,16 @@
 # inq-hub
-System zarzadzania wycenami firmy sprzedażowej.
+Inq-Hub - System zarzadzania wycenami firmy sprzedażowej.
+
+## Zespół
+Nazwa: Hanka&Kartony 
+
+Skład:  
+
+1. PM/Backend: Paulina Piotrowska 95505  
+
+2. Frontend: Olena Hakman 78207 
+
+3. DBA/DevOps: Kornel Kopa 95162 
 
 ## Stack
 
@@ -38,16 +49,24 @@ inq-hub/
 ├── backend/
 │   ├── app/
 │   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   ├── dependencies.py
-│   │   │   └── security.py
-│   │   ├── models/models.py       # modele bazy danych
+│   │   ├── models/                # modele bazy danych
 │   │   ├── routers/               # endpointy API
 │   │   ├── schemas/               # walidacja danych
-│   │   └── services/       
+│   │   └── services/              # logika biznesowa
 │   └── tests/
+├── docs/
+│   └── mockups/                   # makiety stron
 ├── frontend/
 │   └── src/
+│       ├── api/                   # komunikacja z backendem
+│       ├── components/            # komponenty wielokrotnego użytku
+│       ├── pages/                 # widoki/strony
+│       └── types/                 # typy danych
 ├── shared/
-
+└── README.md
 ```
+
+## Branche
+
+- `master` – stabilna wersja
+- `development` – bieżąca praca, tu trafiają zmiany przed mergem do `master`
