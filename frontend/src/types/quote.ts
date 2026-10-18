@@ -17,3 +17,6 @@ export interface QuoteItem {
   date: string;
   notes?: string;
 }
+
+// Alias dla kompatybilności wstecznej z api
+export type Quote = QuoteItem;
