@@ -2,7 +2,7 @@ import initialQuotes from './mockData.json';
 import { Quote } from '../types/quote';
 
 // Użycie zmiennej środowiskowej z Vite
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const getQuotes = async (): Promise<Quote[]> => {
   // Jeśli backend jeszcze nie działa, zwracamy lokalny mock JSON (E3)

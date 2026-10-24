@@ -32,6 +32,20 @@ cd inq-hub
 ### Wymagania
 - Python 3.9+
 - PostgreSQL
+- [Node.js](https://nodejs.org/) 20+ (razem z npm)
+> Na Linux/WSL najprościej zainstalować Node przez [nvm](https://github.com/nvm-sh/nvm): `nvm install --lts`
+
+
+### Frontend
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Aplikacja: http://localhost:5173
 
 ## Funkcjonalności
 

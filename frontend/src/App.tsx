@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import initialQuotesData from './api/mockData.json';
+import {getQuotes} from './api/quotesApi';
 import { QuoteItem, QuoteStatus } from './types/quote';
 import {
   Package,
@@ -49,7 +49,7 @@ export default function App() {
 
   // Wymóg E3: Inicjalizacja danymi makietowymi z pliku JSON
   useEffect(() => {
-    setQuotes(initialQuotesData as QuoteItem[]);
+    getQuotes().then(setQuotes);
   }, []);
 
   // Filtrowanie wycen w czasie rzeczywistym
