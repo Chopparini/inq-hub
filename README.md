@@ -47,6 +47,21 @@ npm run dev
 
 Aplikacja: http://localhost:5173
 
+### Frontend w Dockerze
+
+```bash
+cd frontend
+docker build -t inq-hub-frontend --build-arg VITE_API_BASE_URL=http://localhost:8000/api .
+docker run -d -p 8080:80 --name inq-hub-frontend inq-hub-frontend
+```
+
+Aplikacja: http://localhost:8080
+
+Zatrzymanie i usunięcie kontenera:
+```bash
+docker stop inq-hub-frontend && docker rm inq-hub-frontend
+```
+
 ## Funkcjonalności
 
 ### Konto użytkownika
