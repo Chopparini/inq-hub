@@ -50,6 +50,7 @@ resource "azurerm_postgresql_flexible_server" "db" {
   # wyłącza się automatycznie, nie ustawiamy go ręcznie)
   delegated_subnet_id = azurerm_subnet.snet_db.id
   private_dns_zone_id = azurerm_private_dns_zone.postgres.id
+  public_network_access_enabled = false
 
   administrator_login    = var.db_admin_login
   administrator_password = var.db_admin_password
