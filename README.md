@@ -62,6 +62,28 @@ Zatrzymanie i usunięcie kontenera:
 docker stop inq-hub-frontend && docker rm inq-hub-frontend
 ```
 
+### Backend w Dockerze
+#Przygotowanie pliku z zmiennymi środowiskowymi na podstawie szablonu .env.example
+```bash
+cp .env.example .env
+```
+Plik .env nie może zostać upubliczniony! - z tego powodu znajduje się w .gitignore
+Plik .env musi zostać uzupełniony
+
+#Przygotowanie bazy danych wg. ustalonego schematu
+```bash
+docker compose up -d
+```
+
+Przy pierwszym starcie obraz `postgres` sam wykonuje `01_schema.sql` i `02_test_data.sql`.
+##Pozostałe komendy:
+
+```bash
+docker compose down      # zatrzymanie, dane zostają
+docker compose down -v   # zatrzymanie + wyczyszczenie danych
+```
+
+
 ## Funkcjonalności
 
 ### Konto użytkownika
