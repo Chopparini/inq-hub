@@ -30,11 +30,25 @@ cd inq-hub
 ```
 
 ### Wymagania
-- Python 3.9+
-- PostgreSQL
+- Python 3.12+
+- PostgreSQL 16 (lokalnie w Dockerze)
 - [Node.js](https://nodejs.org/) 20+ (razem z npm)
 > Na Linux/WSL najprościej zainstalować Node przez [nvm](https://github.com/nvm-sh/nvm): `nvm install --lts`
 
+### Backend
+
+Wymaga działającej lokalnie bazy danych.
+
+```bash
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # uzupełnij DATABASE_URL
+uvicorn app.main:app --reload --port 8000
+```
+
+API: http://localhost:8000/api, Swagger: http://localhost:8000/docs
 
 ### Frontend
 
