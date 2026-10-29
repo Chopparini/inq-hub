@@ -1,0 +1,22 @@
+# Lokalna baza danych inq-hub (tylko do pracy i testów lokalnych)
+# Dane logowania pochodzą z pliku .env w głównym katalogu repo (nie trafia do repo).
+# Start:  docker compose up -d
+# Reset:  docker compose down -v && docker compose up -d
+
+services:
+  db:
+    image: postgres:16
+    container_name: inqhub-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docs/database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./docs/database/test_data.sql:/docker-entrypoint-initdb.d/02_test_data.sql:ro
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

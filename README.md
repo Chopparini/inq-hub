@@ -35,6 +35,24 @@ cd inq-hub
 - [Node.js](https://nodejs.org/) 20+ (razem z npm)
 > Na Linux/WSL najprościej zainstalować Node przez [nvm](https://github.com/nvm-sh/nvm): `nvm install --lts`
 
+### Baza danych (Docker)
+
+Z głównego katalogu repo:
+
+```bash
+cp .env.example .env   # uzupełnij POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+docker compose up -d
+```
+
+Plik `.env` jest w `.gitignore` – nie commituj go.
+Przy pierwszym starcie Postgres sam wykonuje `docs/database/schema.sql` i `test_data.sql`.
+
+```bash
+docker compose down      # zatrzymanie, dane zostają
+docker compose down -v   # zatrzymanie i usunięcie danych (przy zmianie schematu)
+```
+
+
 ### Backend
 
 Wymaga działającej lokalnie bazy danych.
@@ -75,6 +93,8 @@ Zatrzymanie i usunięcie kontenera:
 ```bash
 docker stop inq-hub-frontend && docker rm inq-hub-frontend
 ```
+
+
 
 ## Funkcjonalności
 
