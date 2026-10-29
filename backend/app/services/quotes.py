@@ -3,7 +3,7 @@ from sqlalchemy import Integer, func, select, text
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models import Client, Product, Quote, QuoteItem
-from app.schemas.quote import QuoteDetail, QuoteIn, QuoteItemOut, QuoteListItem
+from app.schemas.quote import Dimensions, QuoteDetail, QuoteIn, QuoteItemOut, QuoteListItem
 
 FIRST_NUMBER = 1001
 
@@ -110,6 +110,11 @@ def to_detail(quote: Quote) -> QuoteDetail:
             id=i.id,
             product_id=i.product_id,
             product_name=i.product.name,
+            box_type=i.product.box_type,
+            flute=i.product.flute,
+            dimensions=Dimensions(
+                length=i.product.length_mm, width=i.product.width_mm, height=i.product.height_mm
+            ),
             quantity=i.quantity,
             unit_price=i.unit_price,
             notes=i.notes,

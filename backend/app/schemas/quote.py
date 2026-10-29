@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, model_validator
 from pydantic.alias_generators import to_camel
 
-from app.models.enums import QuoteStatus
+from app.models.enums import BoxType, FluteType, QuoteStatus
 
 # Pydantic domyślnie zwraca Decimal w JSON jako tekst ("1.45"); frontend potrzebuje liczby
 Money = Annotated[Decimal, PlainSerializer(float, return_type=float, when_used="json")]
@@ -13,6 +13,12 @@ Money = Annotated[Decimal, PlainSerializer(float, return_type=float, when_used="
 
 class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+
+class Dimensions(CamelModel):
+    length: int
+    width: int
+    height: int
 
 
 class QuoteItemIn(CamelModel):
@@ -60,6 +66,9 @@ class QuoteItemOut(CamelModel):
     id: int
     product_id: int
     product_name: str
+    box_type: BoxType
+    flute: FluteType
+    dimensions: Dimensions
     quantity: int
     unit_price: Money
     notes: str | None
