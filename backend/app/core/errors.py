@@ -31,15 +31,18 @@ async def integrity_error(request: Request, exc: IntegrityError) -> JSONResponse
     return _error(status.HTTP_400_BAD_REQUEST, ErrorResponse(detail="Dane naruszają ograniczenia bazy danych"))
 
 
-async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Nieobsłużony błąd: %s %s", request.method, request.url.path)
-    return _error(status.HTTP_500_INTERNAL_SERVER_ERROR, ErrorResponse(detail="Wewnętrzny błąd serwera"))
+async def catch_unexpected_errors(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:
+        logger.exception("Nieobsłużony błąd: %s %s", request.method, request.url.path)
+        return _error(status.HTTP_500_INTERNAL_SERVER_ERROR, ErrorResponse(detail="Wewnętrzny błąd serwera"))
 
 
 def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RequestValidationError, validation_error)
     app.add_exception_handler(IntegrityError, integrity_error)
-    app.add_exception_handler(Exception, unexpected_error)
+    app.middleware("http")(catch_unexpected_errors)
     _hide_422_in_docs(app)
 
 
