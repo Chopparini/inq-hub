@@ -1,5 +1,5 @@
 .env
-.env*
+.env.*
 .git
 __pycache__
 tests
