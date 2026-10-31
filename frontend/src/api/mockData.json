@@ -1,0 +1,57 @@
+[
+  {
+    "id": "WYC-1024",
+    "client": "Logistyka PL Sp. z o.o.",
+    "boxType": "Karton klapowy (Fala C)",
+    "dimensions": { "length": 400, "width": 300, "height": 200 },
+    "quantity": 5000,
+    "unitPrice": 1.45,
+    "status": "Zaakceptowana",
+    "date": "14.10.2026",
+    "notes": "FEFCO 0201, tektura 3-warstwowa szara."
+  },
+  {
+    "id": "WYC-1023",
+    "client": "E-sklep Sp. z o.o.",
+    "boxType": "Fasonowy (Fala E)",
+    "dimensions": { "length": 250, "width": 150, "height": 80 },
+    "quantity": 10000,
+    "unitPrice": 0.85,
+    "status": "Wysłana",
+    "date": "13.10.2026",
+    "notes": "FEFCO 0427, mikrofala biała z paskiem klejowym."
+  },
+  {
+    "id": "WYC-1022",
+    "client": "Fabryka Mebli SA",
+    "boxType": "Wielogabarytowy (Fala BC)",
+    "dimensions": { "length": 1200, "width": 800, "height": 600 },
+    "quantity": 500,
+    "unitPrice": 12.30,
+    "status": "Wersja robocza",
+    "date": "12.10.2026",
+    "notes": "Tektura 5-warstwowa wzmocniona, klejona."
+  },
+  {
+    "id": "WYC-1021",
+    "client": "BioFood Natural",
+    "boxType": "Fasonowy (Fala B)",
+    "dimensions": { "length": 320, "width": 220, "height": 110 },
+    "quantity": 2500,
+    "unitPrice": 2.10,
+    "status": "Zaakceptowana",
+    "date": "10.10.2026",
+    "notes": "Z nadrukiem flexo jednokolorowym."
+  },
+  {
+    "id": "WYC-1020",
+    "client": "Polsklep RTV",
+    "boxType": "Karton klapowy (Fala C)",
+    "dimensions": { "length": 600, "width": 400, "height": 350 },
+    "quantity": 1200,
+    "unitPrice": 4.80,
+    "status": "Wysłana",
+    "date": "08.10.2026",
+    "notes": "Standard wysyłkowy paczkomat gabaryt C."
+  }
+]

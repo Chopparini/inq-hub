@@ -1,0 +1,64 @@
+# ===== Python / FastAPI =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ===== Node / React / TypeScript =====
+node_modules/
+frontend/dist/
+frontend/build/
+*.tsbuildinfo
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Terraform =====
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.tfplan
+# .terraform.lock.hcl celowo NIE jest ignorowany - powinien być w repo
+
+# ===== Zmienne środowiskowe / sekrety =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ===== Bazy danych / logi =====
+*.sqlite3
+*.db
+*.log
+
+# ===== IDE / system =====
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+backend/.env.example
