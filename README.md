@@ -129,6 +129,27 @@ inq-hub/
 └── README.md
 ```
 
+## Architektura
+
+```mermaid
+flowchart LR
+    U[Przeglądarka użytkownika]
+    subgraph VNET[vnet-projekt 10.0.0.0/16 – Azure]
+        subgraph WEB[snet-web 10.0.1.0/24 – publiczna]
+            N[Nginx + React]
+        end
+        subgraph APP[snet-app 10.0.2.0/24 – prywatna]
+            A[FastAPI :8000]
+        end
+        subgraph DB[snet-db 10.0.3.0/24 – prywatna]
+            P[(PostgreSQL :5432)]
+        end
+    end
+    U -- HTTP/HTTPS 80/443 --> N
+    N -- REST /api :8000 --> A
+    A -- SQL :5432 --> P
+```
+
 ## Branche
 
 - `master` – stabilna wersja
