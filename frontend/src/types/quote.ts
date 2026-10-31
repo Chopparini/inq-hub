@@ -1,4 +1,6 @@
-export type QuoteStatus = 'Zaakceptowana' | 'Wysłana' | 'Wersja robocza';
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected';
+export type BoxType = 'flap' | 'die_cut' | 'oversized' | 'auto_bottom' | string;
+export type FluteType = 'B' | 'C' | 'E' | 'BC' | string;
 
 export interface Dimensions {
   length: number;
@@ -6,17 +8,58 @@ export interface Dimensions {
   height: number;
 }
 
-export interface QuoteItem {
-  id: string;
-  client: string;
-  boxType: string;
+export interface QuoteItemIn {
+  productId: number;
+  quantity: number;
+  unitPrice?: number | null;
+  notes?: string | null;
+}
+
+export interface QuoteIn {
+  clientId: number;
+  status?: QuoteStatus;
+  quoteDate?: string | null;
+  validUntil?: string | null;
+  notes?: string | null;
+  items: QuoteItemIn[];
+}
+
+export interface QuoteItemOut {
+  id: number;
+  productId: number;
+  productName: string;
+  boxType: BoxType;
+  flute: FluteType;
   dimensions: Dimensions;
   quantity: number;
   unitPrice: number;
-  status: QuoteStatus;
-  date: string;
-  notes?: string;
+  notes?: string | null;
+  lineTotal: number;
 }
 
-// Alias dla kompatybilności wstecznej z api
-export type Quote = QuoteItem;
+export interface QuoteListItem {
+  id: number;
+  number: string;
+  clientId: number;
+  clientName: string;
+  status: QuoteStatus;
+  quoteDate: string;
+  validUntil?: string | null;
+  itemsCount: number;
+  totalValue: number;
+}
+
+export interface QuoteDetail {
+  id: number;
+  number: string;
+  clientId: number;
+  clientName: string;
+  status: QuoteStatus;
+  quoteDate: string;
+  validUntil?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: QuoteItemOut[];
+  totalValue: number;
+}

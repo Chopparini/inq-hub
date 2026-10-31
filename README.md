@@ -87,6 +87,53 @@ npm run dev
 
 Aplikacja: http://localhost:5173
 
+Aplikacja integruje się bezpośrednio przez REST API z usługą FastAPI oraz bazą PostgreSQL działającą w kontenerze Docker.
+
+---
+
+1. **Pełny cykl operacji CRUD:**
+   * **Odczyt listy wycen (`GET /api/quotes`):** Prezentacja zagregowanych danych handlowych w tabeli (numer wyceny nadany przez serwer, nazwa klienta, data wyceny w formacie `dd.mm.rrrr`, liczba pozycji, całkowita wartość zamówienia oraz badge statusu).
+   * **Szczegóły wyceny (`GET /api/quotes/{id}`):** Dedykowany widok modalny prezentujący pozycje wyceny wraz z ich parametrami produkcyjnymi.
+   * **Tworzenie nowej wyceny (`POST /api/quotes`):** Formularz umożliwiający kalkulację oferty z obsługą wielu pozycji asortymentowych w ramach jednego zamówienia.
+   * **Edycja wyceny (`PUT /api/quotes/{id}`):** Możliwość pełnej modyfikacji nagłówka wyceny (klient, status, daty, uwagi) oraz pozycji zamówienia (dodawanie/usuwanie wierszy, zmiana produktów i nakładów).
+   * **Usuwanie wyceny (`DELETE /api/quotes/{id}`):** Kaskadowe usunięcie kalkulacji wraz z jej pozycjami z bazy danych z potwierdzeniem operacji.
+
+2. **Dynamiczny formularz pozycji zamówienia:**
+   * Możliwość dynamicznego dodawania i usuwania wierszy produktów w ramach jednej wyceny.
+   * **Opcjonalna cena jednostkowa:** Pozostawienie pustego pola ceny powoduje, że frontend nie wysyła wartości `unitPrice` (klucz jest pomijany w payloadzie JSON, unikając wysyłania pustego ciągu znaków `""` lub zera), dzięki czemu backend automatycznie przypisuje aktualną cenę bazową z cennika produktów.
+
+3. **Walidacja danych i integralność biznesowa:**
+   * **Po stronie klienta:** Blokada wysyłki w przypadku braku wybranego klienta, pustej listy pozycji lub nakładu mniejszego/równego 0.
+   * **Walidacja unikalności asortymentu:** System uniemożliwia wybranie tego samego produktu na dwóch różnych pozycjach w obrębie jednej kalkulacji (zgodnie z regułą bazy danych).
+   * **Obsługa błędów API (`400 Bad Request`):** Błędy walidacji reguł biznesowych z backendu (np. naruszenie warunku `validUntil >= quoteDate`) są mapowane ze schematu `ErrorResponse` Pydantic i wyświetlane wewnątrz okna formularza bez utraty wprowadzonych danych.
+
+4. **Obsługa asynchronicznych stanów interfejsu (UX):**
+   * **Stan ładowania (Loading State):** Animowany szkielet tabeli (*Skeleton Loader*) rezerwujący przestrzeń na dane podczas zapytań `GET`, połączony z blokadą przycisków akcji (`isSubmitting`) zapobiegającą wielokrotnemu klikaniu.
+   * **System powiadomień (Toast Notifications):** Informacje zwrotne o pomyślnym wykonaniu operacji zapisu, edycji lub usunięcia z automatycznym wygaszaniem.
+   * **Odporność na brak sieci:** W przypadku niedostępności serwera FastAPI tabela przechodzi w dedykowany stan awaryjny z komunikatem *„Brak połączenia z serwerem”* oraz przyciskiem ponowienia próby.
+
+---
+
+### Struktura modułu frontendowego
+
+```text
+frontend/
+├── src/
+│   ├── api/
+│   │   └── quotesApi.ts      # Warstwa komunikacji HTTP z REST API (Fetch API, obsługa payloadów camelCase)
+│   ├── types/
+│   │   └── quote.ts          # Definicje typów TypeScript odzwierciedlające schematy Pydantic (QuoteListItem, QuoteDetail, QuoteIn)
+│   ├── App.tsx               # Główny komponent aplikacji: tabela wycen, panel statystyk, modale CRUD i stany UX
+│   ├── main.tsx              # Punkt wejściowy aplikacji React
+│   └── index.css             # Style globalne oraz konfiguracja dyrektyw Tailwind CSS
+├── .env                      # Konfiguracja adresu bazowego API (VITE_API_URL)
+├── index.html                # Szablon strony HTML
+├── package.json              # Zależności projektu (React, Lucide React, Vite, Tailwind CSS)
+├── tailwind.config.js        # Konfiguracja motywu graficznego Tailwind
+├── tsconfig.json             # Konfiguracja kompilatora TypeScript
+└── vite.config.ts            # Konfiguracja bundlera Vite
+```
+
 ### Frontend w Dockerze
 
 ```bash
