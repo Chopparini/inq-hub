@@ -234,5 +234,5 @@ flowchart LR
 
 ## Branche
 
-- `master` – stabilna wersja
-- `development` – bieżąca praca, tu trafiają zmiany przed mergem do `master`
+- `main` – stabilna wersja
+- `development` – bieżąca praca, tu trafiają zmiany przed mergem do `main`
