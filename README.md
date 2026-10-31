@@ -98,11 +98,33 @@ docker stop inq-hub-frontend && docker rm inq-hub-frontend
 
 ## Funkcjonalności
 
-### Konto użytkownika
 - Rejestracja i logowanie
 - Zapis i przeglądanie wycen/ofert 
 
-### Testowanie API (Postman / Swagger)
+## API
+
+- Swagger (testowanie): http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- OpenAPI, np. do importu w Postmanie: http://localhost:8000/openapi.json
+
+| Metoda | Ścieżka | Opis | Statusy |
+|---|---|---|---|
+| GET | `/health` | stan serwera i połączenia z bazą | 200, 500 |
+| GET | `/quotes` | lista wycen z klientem i sumą | 200, 500 |
+| GET | `/quotes/{id}` | szczegóły wyceny z pozycjami | 200, 400, 404, 500 |
+| POST | `/quotes` | utworzenie wyceny, numer nadaje serwer | 201, 400, 500 |
+| PUT | `/quotes/{id}` | zastąpienie nagłówka i pozycji wyceny | 200, 400, 404, 500 |
+| DELETE | `/quotes/{id}` | usunięcie wyceny z pozycjami | 204, 400, 404, 500 |
+| GET | `/clients` | lista klientów do formularza | 200, 500 |
+| GET | `/products` | lista aktywnych produktów do formularza | 200, 500 |
+
+### Postman
+
+```bash
+curl -X POST http://localhost:8000/api/quotes \
+  -H "Content-Type: application/json" \
+  -d '{"clientId": 2, "items": [{"productId": 1, "quantity": 500}]}'
+```
 
 
 ## Struktura projektu
@@ -111,13 +133,16 @@ docker stop inq-hub-frontend && docker rm inq-hub-frontend
 inq-hub/
 ├── backend/
 │   ├── app/
-│   │   ├── core/
+│   │   ├── core/                  # konfiguracja, połączenie z bazą, obsługa błędów
 │   │   ├── models/                # modele bazy danych
 │   │   ├── routers/               # endpointy API
 │   │   ├── schemas/               # walidacja danych
-│   │   └── services/              # logika biznesowa
-│   └── tests/
+│   │   ├── services/              # logika biznesowa
+│   │   └── main.py                # aplikacja FastAPI
+│   ├── tests/
+│   └── requirements.txt
 ├── docs/
+│   ├── database/                  # schemat bazy i dane testowe
 │   └── mockups/                   # makiety stron
 ├── frontend/
 │   └── src/
@@ -126,6 +151,8 @@ inq-hub/
 │       ├── pages/                 # widoki/strony
 │       └── types/                 # typy danych
 ├── shared/
+├── terraform/                     # infrastruktura Azure
+├── docker-compose.yml             # lokalna baza danych
 └── README.md
 ```
 
