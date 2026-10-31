@@ -456,8 +456,7 @@ export default function App() {
               <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-purple-300 bg-clip-text text-transparent">
                 Wyceny i Oferty
               </h2>
-              <p className="text-sm text-slate-400 mt-1">
-                Kalkulacja ofertowa z obsługą wielu pozycji kartonów
+              <p className="text-sm text-slate-400 mt-1">  
               </p>
             </div>
 
