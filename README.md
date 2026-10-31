@@ -68,6 +68,14 @@ uvicorn app.main:app --reload --port 8000
 
 API: http://localhost:8000/api, Swagger: http://localhost:8000/docs
 
+### Backend w Dockerze
+
+```bash
+cd backend
+docker build -t inq-hub-backend .
+docker run --rm -p 8000:8000 -e "DATABASE_URL=postgresql+psycopg://USER:HASLO@host.docker.internal:5432/inqhub" inq-hub-backend
+```
+
 ### Frontend
 
 ```bash
