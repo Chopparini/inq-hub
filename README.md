@@ -132,6 +132,7 @@ frontend/
 ├── tailwind.config.js        # Konfiguracja motywu graficznego Tailwind
 ├── tsconfig.json             # Konfiguracja kompilatora TypeScript
 └── vite.config.ts            # Konfiguracja bundlera Vite
+```
 
 ### Frontend w Dockerze
 
