@@ -1,4 +1,4 @@
-import { QuoteItem, QuoteStatus } from '../types/quote';
+import { QuoteListItem, QuoteDetail, QuoteIn } from '../types/quote';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -13,54 +13,6 @@ export interface ProductOption {
   defaultPrice?: number;
 }
 
-export interface FullQuotePayload {
-  clientId: number | string;
-  productId: number | string;
-  quantity: number | string;
-  unitPrice?: number | string;
-  status?: QuoteStatus;
-  notes?: string;
-}
-
-function mapStatusToApi(status?: QuoteStatus): string {
-  switch (status) {
-    case 'Zaakceptowana': return 'accepted';
-    case 'Wysłana': return 'sent';
-    case 'Wersja robocza':
-    default: return 'draft';
-  }
-}
-
-function mapStatusFromApi(status: any): QuoteStatus {
-  const s = String(status || '').toLowerCase();
-  if (s === 'accepted' || s === 'zaakceptowana') return 'Zaakceptowana';
-  if (s === 'sent' || s === 'wyslana' || s === 'wysłana') return 'Wysłana';
-  return 'Wersja robocza';
-}
-
-function normalizeQuote(raw: any): QuoteItem & { numericId: number; number: string } {
-  const numId = Number(raw.id || 1);
-  const numStr = String(raw.number || `WYC-${numId}`);
-
-  return {
-    id: String(numId),
-    numericId: numId,
-    number: numStr,
-    client: raw.clientName || raw.client_name || `Klient ${raw.clientId || raw.client_id || ''}`,
-    boxType: raw.itemsCount ? `${raw.itemsCount} poz.` : '1 poz.',
-    dimensions: {
-      length: 0,
-      width: 0,
-      height: 0,
-    },
-    quantity: raw.itemsCount ?? 1,
-    unitPrice: Number(raw.totalValue ?? raw.total_value ?? 0),
-    status: mapStatusFromApi(raw.status),
-    date: raw.quoteDate || raw.quote_date || new Date().toISOString().split('T')[0],
-    notes: raw.notes || '',
-  };
-}
-
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let errorDetail = `Błąd serwera (${response.status})`;
@@ -70,10 +22,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
         errorDetail = errorData.errors.map((err: any) => `${err.field}: ${err.message}`).join(', ');
       } else if (typeof errorData.detail === 'string') {
         errorDetail = errorData.detail;
+      } else if (Array.isArray(errorData.detail)) {
+        errorDetail = errorData.detail.map((e: any) => e.msg).join(', ');
       }
     } catch {
       if (response.status === 400) errorDetail = 'Niepoprawne dane (400 Bad Request).';
       if (response.status === 404) errorDetail = 'Nie odnaleziono zasobu (404).';
+      if (response.status === 500) errorDetail = 'Wewnętrzny błąd serwera (500).';
     }
     throw new Error(errorDetail);
   }
@@ -82,16 +37,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const quotesApi = {
-  async getQuotes(): Promise<any[]> {
+  async getQuotes(): Promise<QuoteListItem[]> {
+    // Opóźnienie 800ms dla płynnego stanu ładowania w interfejsie
+    await new Promise((r) => setTimeout(r, 800));
     const res = await fetch(`${API_BASE_URL}/quotes`);
-    const rawData = await handleResponse<any>(res);
-    const list = Array.isArray(rawData) ? rawData : rawData.items || [];
-    return list.map(normalizeQuote);
+    return handleResponse<QuoteListItem[]>(res);
   },
 
-  async getQuoteDetail(id: number | string): Promise<any> {
-    const res = await fetch(`${API_BASE_URL}/quotes/${Number(id)}`);
-    return handleResponse<any>(res);
+  async getQuote(quoteId: number): Promise<QuoteDetail> {
+    const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`);
+    return handleResponse<QuoteDetail>(res);
   },
 
   async getClients(): Promise<ClientOption[]> {
@@ -111,57 +66,30 @@ export const quotesApi = {
     return list.map((p: any) => ({
       id: parseInt(p.id ?? p.productId, 10),
       name: p.name ?? p.productName ?? `Produkt ${p.id}`,
-      defaultPrice: p.defaultPrice ?? p.default_price ?? p.unitPrice ?? 1.5,
+      defaultPrice: p.defaultPrice ?? p.default_price ?? p.unitPrice ?? null,
     }));
   },
 
-  async createQuote(payload: FullQuotePayload): Promise<any> {
-    const body = {
-      clientId: parseInt(String(payload.clientId), 10),
-      status: mapStatusToApi(payload.status),
-      notes: payload.notes || 'Wycena utworzona z interfejsu WWW',
-      items: [
-        {
-          productId: parseInt(String(payload.productId), 10),
-          quantity: parseInt(String(payload.quantity), 10),
-          unitPrice: payload.unitPrice ? parseFloat(String(payload.unitPrice)) : undefined,
-        }
-      ]
-    };
-
+  async createQuote(payload: QuoteIn): Promise<QuoteDetail> {
     const res = await fetch(`${API_BASE_URL}/quotes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
-    const result = await handleResponse<any>(res);
-    return normalizeQuote(result);
+    return handleResponse<QuoteDetail>(res);
   },
 
-  async updateQuote(numericId: number | string, payload: FullQuotePayload): Promise<void> {
-    const body = {
-      clientId: parseInt(String(payload.clientId), 10),
-      status: mapStatusToApi(payload.status),
-      notes: payload.notes ?? '',
-      items: [
-        {
-          productId: parseInt(String(payload.productId), 10),
-          quantity: parseInt(String(payload.quantity), 10),
-          unitPrice: payload.unitPrice ? parseFloat(String(payload.unitPrice)) : undefined,
-        }
-      ]
-    };
-
-    const res = await fetch(`${API_BASE_URL}/quotes/${Number(numericId)}`, {
+  async updateQuote(quoteId: number, payload: QuoteIn): Promise<QuoteDetail> {
+    const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
-    return handleResponse<void>(res);
+    return handleResponse<QuoteDetail>(res);
   },
 
-  async deleteQuote(numericId: number | string): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/quotes/${Number(numericId)}`, {
+  async deleteQuote(quoteId: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
       method: 'DELETE',
     });
     return handleResponse<void>(res);
