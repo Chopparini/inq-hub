@@ -85,7 +85,7 @@ npm install
 npm run dev
 ```
 
-Aplikacja: http://localhost:51
+Aplikacja: http://localhost:5173
 
 ### Frontend w Dockerze
 
