@@ -29,6 +29,10 @@ FIELD_MESSAGES = {
     "list_type": "Wartość musi być listą",
     "model_type": "Niepoprawny format danych",
     "string_type": "Wartość musi być tekstem",
+    "string_too_short": "Tekst musi mieć co najmniej {min_length} znaków",
+    "string_too_long": "Tekst może mieć najwyżej {max_length} znaków",
+    "string_pattern_mismatch": "Niepoprawny format",
+
 }
 
 HTTP_MESSAGES = {

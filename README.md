@@ -52,6 +52,13 @@ docker compose down      # zatrzymanie, dane zostają
 docker compose down -v   # zatrzymanie i usunięcie danych (przy zmianie schematu)
 ```
 
+Konta testowe z `test_data.sql`:
+
+| Login | Hasło | Rola |
+|---|---|---|
+| `admin` | `demo123` | admin |
+| `handlowy` | `demo123` | sales |
+
 
 ### Backend
 
@@ -62,8 +69,14 @@ cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # uzupełnij DATABASE_URL
+cp .env.example .env   # uzupełnij DATABASE_URL i SECRET_KEY
 uvicorn app.main:app --reload --port 8000
+```
+
+`SECRET_KEY` wygenerujesz poleceniem:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 API: http://localhost:8000/api, Swagger: http://localhost:8000/docs
@@ -73,7 +86,10 @@ API: http://localhost:8000/api, Swagger: http://localhost:8000/docs
 ```bash
 cd backend
 docker build -t inq-hub-backend .
-docker run --rm -p 8000:8000 -e "DATABASE_URL=postgresql+psycopg://USER:HASLO@host.docker.internal:5432/inqhub" inq-hub-backend
+docker run --rm -p 8000:8000 \
+  -e "DATABASE_URL=postgresql+psycopg://USER:HASLO@host.docker.internal:5432/inqhub" \
+  -e "SECRET_KEY=TWOJ_KLUCZ" \
+  inq-hub-backend
 ```
 
 ### Frontend
@@ -164,6 +180,9 @@ docker stop inq-hub-frontend && docker rm inq-hub-frontend
 
 | Metoda | Ścieżka | Opis | Statusy |
 |---|---|---|---|
+| POST | `/auth/register` | rejestracja, nowe konto ma rolę `sales` | 201, 400, 500 |
+| POST | `/auth/login` | logowanie (formularz `username`, `password`), zwraca token | 200, 400, 401, 500 |
+| GET | `/auth/me` | dane zalogowanego użytkownika, wymaga tokenu | 200, 401, 500 |
 | GET | `/health` | stan serwera i połączenia z bazą | 200, 500 |
 | GET | `/quotes` | lista wycen z klientem i sumą | 200, 500 |
 | GET | `/quotes/{id}` | szczegóły wyceny z pozycjami | 200, 400, 404, 500 |
@@ -172,6 +191,13 @@ docker stop inq-hub-frontend && docker rm inq-hub-frontend
 | DELETE | `/quotes/{id}` | usunięcie wyceny z pozycjami | 204, 400, 404, 500 |
 | GET | `/clients` | lista klientów do formularza | 200, 500 |
 | GET | `/products` | lista aktywnych produktów do formularza | 200, 500 |
+
+
+### Autoryzacja
+
+Endpointy wymagające logowania przyjmują token w nagłówku `Authorization: Bearer <token>`.
+W Swaggerze kliknij **Authorize** i podaj login i hasło, a token zostanie dodany do zapytań sam.
+
 
 ### Postman
 
