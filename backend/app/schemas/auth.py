@@ -1,13 +1,17 @@
-from email_validator import EmailNotValidError, validate_email
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import UserRole
 from app.schemas.quote import CamelModel
+from app.schemas.validators import normalize_email
 from app.core.config import settings
 
 
 
 class UserRegister(CamelModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [{"username": "jan.kowalski", "email": "jan@example.com", "password": "tajne1234"}]
@@ -21,10 +25,8 @@ class UserRegister(CamelModel):
     @field_validator("email")
     @classmethod
     def check_email(cls, value: str) -> str:
-        try:
-            return validate_email(value, check_deliverability=False).normalized
-        except EmailNotValidError:
-            raise ValueError("Niepoprawny adres e-mail")
+        return normalize_email(value)
+
 
 
 class UserOut(CamelModel):
