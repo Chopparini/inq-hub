@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.errors import register_error_handlers
-from app.routers import clients, products, quotes
+from app.routers import auth, clients, products, quotes
 
 app = FastAPI(title="inq-hub API", version="0.1.0")
 register_error_handlers(app)
@@ -26,6 +26,7 @@ app.add_middleware(
 )
 
 api_router = APIRouter(prefix="/api")
+api_router.include_router(auth.router)
 api_router.include_router(quotes.router)
 api_router.include_router(clients.router)
 api_router.include_router(products.router)

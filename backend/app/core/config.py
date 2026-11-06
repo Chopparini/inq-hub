@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     # Brak wartości domyślnej celowo – bez DATABASE_URL aplikacja nie wystartuje (zero haseł w kodzie)
     database_url: str
 
+    #auth token, sesja
+    secret_key: str
+    access_token_expire_minutes: int = 60
+    password_min_length: int = 8
+
+
     # Adresy frontendu, które mogą wołać API z przeglądarki (CORS)
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:8080"]
 

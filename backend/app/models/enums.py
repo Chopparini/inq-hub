@@ -10,6 +10,11 @@ class QuoteStatus(str, enum.Enum):
     REJECTED = "rejected"
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    SALES = "sales"
+
+
 class BoxType(str, enum.Enum):
     FLAP = "flap"
     DIE_CUT = "die_cut"
