@@ -35,6 +35,15 @@ jobs:
           ignore-unfixed: true
           exit-code: 1
         # krok Trivy
+        
+  docker-build:
+    needs: [secret-scan, vuln-scan]
+    - uses: actions/checkout@v4
+    - name: Build frontend image
+      run: docker build -t inq-hub-frontend --build-arg VITE_API_BASE_URL=http://localhost:8000/api ./frontend
+    - name: Build backend image
+      run: docker build -t inq-hub-backend ./backend
+
   
   # joby budowania: frontend-build, backend-test, docker-build
   # każdy z: needs: [secret-scan, vuln-scan]
