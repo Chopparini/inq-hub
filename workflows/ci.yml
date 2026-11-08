@@ -1,0 +1,27 @@
+name: CI & Security Scan
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # krok skanera sekretów
+
+  vuln-scan:
+    name: vuln-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # krok Trivy
+
+  # joby budowania: frontend-build, backend-test, docker-build
+  # każdy z: needs: [secret-scan, vuln-scan]
