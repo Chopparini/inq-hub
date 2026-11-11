@@ -15,7 +15,7 @@ jobs:
     name: secret-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
@@ -26,7 +26,7 @@ jobs:
     name: vuln-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [secret-scan, vuln-scan]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build frontend image
         run: docker build -t inq-hub-frontend --build-arg VITE_API_BASE_URL=http://localhost:8000/api ./frontend
       - name: Build backend image
@@ -59,7 +59,7 @@ jobs:
       DATABASE_URL: postgresql+psycopg://ci:ci@localhost:5432/ci
       SECRET_KEY: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -80,7 +80,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
