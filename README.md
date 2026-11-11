@@ -45,7 +45,7 @@ docker compose up -d
 ```
 
 Plik `.env` jest w `.gitignore` – nie commituj go.
-Przy pierwszym starcie Postgres sam wykonuje `docs/database/schema.sql` i `test_data.sql`.
+Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql` i `test_data.sql`.
 
 ```bash
 docker compose down      # zatrzymanie, dane zostają
@@ -137,6 +137,7 @@ docker stop inq-hub-frontend && docker rm inq-hub-frontend
 | POST | `/auth/login` | logowanie (formularz `username`, `password`), zwraca token | 200, 400, 401, 500 |
 | GET | `/auth/me` | dane zalogowanego użytkownika, wymaga tokenu | 200, 401, 500 |
 | GET | `/health` | stan serwera i połączenia z bazą | 200, 500 |
+| GET | `/version` | identyfikator commita wdrożonej wersji | 200 |
 | GET | `/quotes` | lista wycen z klientem i sumą | 200, 500 |
 | GET | `/quotes/{id}` | szczegóły wyceny z pozycjami | 200, 400, 404, 500 |
 | POST | `/quotes` | utworzenie wyceny, numer nadaje serwer | 201, 400, 500 |

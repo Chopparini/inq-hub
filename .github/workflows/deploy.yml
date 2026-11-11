@@ -1,0 +1,94 @@
+name: CD – Deploy to Azure
+
+on:
+  workflow_call:
+
+jobs:
+  deploy-backend:
+    name: deploy-backend
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      IMAGE: ghcr.io/chopparini/inq-hub-backend:${{ github.sha }}
+      RESOURCE_GROUP: rg-wsb-projekt
+      CONTAINER_APP: ca-inqhub-backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push image
+        run: |
+          docker build --build-arg GIT_SHA=${{ github.sha }} -t "$IMAGE" backend
+          docker push "$IMAGE"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Update Container App
+        run: az containerapp update --name "$CONTAINER_APP" --resource-group "$RESOURCE_GROUP" --image "$IMAGE"
+
+  deploy-frontend:
+    name: deploy-frontend
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.BACKEND_URL }}
+          VITE_APP_VERSION: ${{ github.sha }}
+      - name: Deploy to Static Web Apps
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: frontend/dist
+          skip_app_build: true
+          output_location: ""
+
+  healthcheck:
+    name: healthcheck
+    needs: [deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backend health
+        run: |
+          for i in $(seq 1 10); do
+            curl -fsS "${{ vars.BACKEND_URL }}/health" && exit 0
+            echo "Próba $i nieudana, czekam 15 s"
+            sleep 15
+          done
+          exit 1
+
+      - name: Backend version
+        run: |
+          for i in $(seq 1 10); do
+            v=$(curl -fsS "${{ vars.BACKEND_URL }}/version" | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])") || v=""
+            echo "Wdrożona: $v, oczekiwana: ${{ github.sha }}"
+            [ "$v" = "${{ github.sha }}" ] && exit 0
+            sleep 15
+          done
+          exit 1
+
+      - name: Frontend
+        run: curl -fsS -o /dev/null -w "HTTP %{http_code}\n" "${{ vars.FRONTEND_URL }}"

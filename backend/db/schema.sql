@@ -50,6 +50,8 @@ CREATE TYPE flute_type AS ENUM (
 CREATE TABLE users (
     id               SERIAL PRIMARY KEY,
     username         VARCHAR(50)  NOT NULL UNIQUE,
+    first_name       VARCHAR(50),                     -- wymagane przy rejestracji, puste dla kont systemowych
+    last_name        VARCHAR(100),
     email            VARCHAR(255) NOT NULL UNIQUE,
     hashed_password  VARCHAR(255) NOT NULL,          -- tylko hash, nigdy hasło jawne
     role             user_role    NOT NULL DEFAULT 'sales',

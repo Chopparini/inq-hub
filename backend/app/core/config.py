@@ -15,8 +15,16 @@ class Settings(BaseSettings):
     password_min_length: int = 8
 
 
-    # Adresy frontendu, które mogą wołać API z przeglądarki (CORS)
-    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:8080"]
+    #adresy frontendu po przecinku (CORS)
+    allowed_origins: str = "http://localhost:5173,http://localhost:8080"
+
+    @property
+    def allowed_origins_list(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()]
+
+    #id commita, z którego zbudowano obraz
+    git_sha: str = "lokalna" #placeholder
+
 
 
 settings = Settings()
