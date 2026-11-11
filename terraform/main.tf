@@ -178,3 +178,110 @@ resource "azurerm_subnet_network_security_group_association" "db_assoc" {
   subnet_id                 = azurerm_subnet.snet_db.id
   network_security_group_id = azurerm_network_security_group.nsg_db.id
 }
+
+
+# FRONTEND: STATIC WEB APPS (Obsługiwany region, np. westeurope)
+
+
+resource "azurerm_static_web_app" "frontend" {
+  name                = "swa-inqhub-frontend"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = "centralus" # swedencentral nie obsługuje Static Web Apps
+  sku_tier            = "Free"
+  sku_size            = "Free"
+}
+
+
+# BACKEND: CONTAINER APPS ENVIRONMENT & CONTAINER APP
+
+
+resource "azurerm_container_app_environment" "cae" {
+  name                       = "cae-inqhub"
+  location                   = azurerm_resource_group.rg.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  infrastructure_subnet_id   = azurerm_subnet.snet_app.id
+  internal_load_balancer_enabled = false
+}
+
+resource "azurerm_container_app" "backend" {
+  name                         = "ca-inqhub-backend"
+  container_app_environment_id = azurerm_container_app_environment.cae.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  revision_mode                = "Single"
+
+  template {
+    min_replicas = 0
+    max_replicas = 1
+
+    container {
+      name   = "backend"
+      image  = "mcr.microsoft.com/k8se/quickstart:latest"
+      cpu    = "0.25"
+      memory = "0.5Gi"
+
+      # Zmienne środowiskowe mapujące sekrety oraz adres frontendu
+      env {
+        name        = "DATABASE_URL"
+        secret_name = "database-url"
+      }
+
+      env {
+        name        = "SECRET_KEY"
+        secret_name = "jwt-secret"
+      }
+
+      env {
+        name  = "ALLOWED_ORIGINS"
+        value = "https://${azurerm_static_web_app.frontend.default_host_name}"
+      }
+    }
+  }
+
+  ingress {
+    external_enabled           = true
+    target_port                = 8000
+    transport                  = "auto"
+    allow_insecure_connections = false
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
+  }
+
+  secret {
+    name  = "database-url"
+    value = var.database_url
+  }
+
+  secret {
+    name  = "jwt-secret"
+    value = var.jwt_secret
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image
+    ]
+  }
+}
+
+
+# OUTPUTY (Adresy dla GitHub Actions)
+
+
+output "frontend_url" {
+  description = "Adres URL frontendu Static Web Apps"
+  value       = "https://${azurerm_static_web_app.frontend.default_host_name}"
+}
+
+output "backend_url" {
+  description = "Adres URL backendu Container App z prefiksem /api"
+  value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}/api"
+}
+
+output "static_web_app_api_token" {
+  description = "Klucz wdrożeniowy dla Static Web Apps do GitHub Secrets"
+  value       = azurerm_static_web_app.frontend.api_key
+  sensitive   = true
+}
