@@ -24,9 +24,9 @@ def main() -> None:
         conn.exec_driver_sql((DB_DIR / "schema.sql").read_text(encoding="utf-8"))
         conn.execute(
             text(
-                "INSERT INTO users (username, email, hashed_password, role) VALUES "
-                "('admin', 'admin@hanka-kartony.pl', :admin_h, 'admin'), "
-                "('handlowy', 'handlowy@hanka-kartony.pl', :sales_h, 'sales')"
+                "INSERT INTO users (username, first_name, last_name, email, hashed_password, role) VALUES "
+                "('admin', NULL, NULL, 'admin@hanka-kartony.pl', :admin_h, 'admin'), "
+                "('handlowy', 'Olena', 'Hakman', 'handlowy@hanka-kartony.pl', :sales_h, 'sales')"
             ),
             {"admin_h": hash_password(admin_password), "sales_h": hash_password(sales_password)},
         )
