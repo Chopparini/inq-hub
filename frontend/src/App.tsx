@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { quotesApi, ClientOption, ProductOption } from './api/quotesApi';
 import { QuoteListItem, QuoteDetail, QuoteStatus, QuoteIn } from './types/quote';
+import { User, ROLE_LABELS } from './types/auth';
 import {
   Package,
   FileSpreadsheet,
@@ -19,7 +20,8 @@ import {
   CheckCircle2,
   Calendar,
   RotateCw,
-  WifiOff
+  WifiOff,
+  LogOut
 } from 'lucide-react';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION
@@ -63,7 +65,12 @@ interface FormItemState {
   notes: string;
 }
 
-export default function App() {
+interface AppProps {
+  user: User;
+  onLogout: () => void;
+}
+
+export default function App({ user, onLogout }: AppProps) {
   const [quotes, setQuotes] = useState<QuoteListItem[]>([]);
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
@@ -422,13 +429,20 @@ export default function App() {
 
         <div>
           <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-sm text-white">
-              OH
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-sm text-white uppercase">
+              {user.username.slice(0, 2)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-200 truncate">Olena Hakman</p>
-              <p className="text-xs text-purple-400 truncate">Frontend Dev</p>
+              <p className="text-sm font-medium text-slate-200 truncate">{user.username}</p>
+              <p className="text-xs text-purple-400 truncate">{ROLE_LABELS[user.role]}</p>
             </div>
+            <button
+              onClick={onLogout}
+              title="Wyloguj"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
           <p className="mt-3 px-2 text-[11px] text-slate-500">Wersja: {APP_VERSION}</p>
         </div>

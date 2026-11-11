@@ -19,6 +19,11 @@ export default function AuthGate() {
       .finally(() => setChecking(false));
   }, []);
 
+function handleLogout() {
+    authApi.logout();
+    setUser(null);
+  }
+
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0b0e14]">
@@ -29,5 +34,5 @@ export default function AuthGate() {
 
   if (!user) return <LoginPage onLoggedIn={setUser} />;
 
-  return <App />;
+  return <App user={user} onLogout={handleLogout} />;
 }
