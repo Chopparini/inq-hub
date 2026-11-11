@@ -78,6 +78,8 @@ resource "azurerm_subnet" "snet_db" {
 
 
 # 1. NSG dla warstwy Web (Publiczna)
+# Warstwa web z założenia publiczna - otwarte porty 80 i 443
+#trivy:ignore:AZU-0047
 resource "azurerm_network_security_group" "nsg_web" {
   name                = "nsg-web"
   location            = azurerm_resource_group.rg.location
