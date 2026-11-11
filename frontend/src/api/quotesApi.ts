@@ -1,6 +1,5 @@
 import { QuoteListItem, QuoteDetail, QuoteIn } from '../types/quote';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+import { API_BASE_URL, handleResponse } from './client';
 
 export interface ClientOption {
   id: number;
@@ -13,28 +12,6 @@ export interface ProductOption {
   defaultPrice?: number;
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    let errorDetail = `Błąd serwera (${response.status})`;
-    try {
-      const errorData = await response.json();
-      if (Array.isArray(errorData.errors)) {
-        errorDetail = errorData.errors.map((err: any) => `${err.field}: ${err.message}`).join(', ');
-      } else if (typeof errorData.detail === 'string') {
-        errorDetail = errorData.detail;
-      } else if (Array.isArray(errorData.detail)) {
-        errorDetail = errorData.detail.map((e: any) => e.msg).join(', ');
-      }
-    } catch {
-      if (response.status === 400) errorDetail = 'Niepoprawne dane (400 Bad Request).';
-      if (response.status === 404) errorDetail = 'Nie odnaleziono zasobu (404).';
-      if (response.status === 500) errorDetail = 'Wewnętrzny błąd serwera (500).';
-    }
-    throw new Error(errorDetail);
-  }
-  if (response.status === 204) return {} as T;
-  return response.json();
-}
 
 export const quotesApi = {
   async getQuotes(): Promise<QuoteListItem[]> {
