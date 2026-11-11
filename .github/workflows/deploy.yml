@@ -1,0 +1,29 @@
+name: CD – Deploy to Azure
+
+on:
+  workflow_call:
+
+jobs:
+  deploy-backend:
+    name: deploy-backend
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "TODO – wdrożenie backendu"
+
+  deploy-frontend:
+    name: deploy-frontend
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "TODO – wdrożenie frontendu"
+
+  healthcheck:
+    name: healthcheck
+    needs: [deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TODO – weryfikacja po wdrożeniu"
