@@ -9,13 +9,11 @@ from app.schemas.quote import QuoteIn
 
 
 def test_register_rejects_invalid_email():
-    '''sprawdza format email w rejestracji usera'''
     with pytest.raises(ValidationError):
         UserRegister(username="jan", email="zly-email", password="tajne1234")
 
 
 def test_client_empty_fields_become_none():
-    '''cyz puste stringi zamieniaja sie w None'''
     client = ClientIn(name="Firma", nip="", postal_code="  ")
     assert client.nip is None
     assert client.postal_code is None
