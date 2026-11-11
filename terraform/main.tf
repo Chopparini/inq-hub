@@ -55,6 +55,13 @@ resource "azurerm_subnet" "snet_app" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
+  delegation {
+    name = "containerapp-delegation"
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 # Prywatna podsieć dla PostgreSQL (DB) z delegacją
@@ -63,14 +70,6 @@ resource "azurerm_subnet" "snet_db" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.3.0/24"]
-  delegation {
-    name = "aca-delegation"
-    service_delegation {
-      name    = "Microsoft.App/environments"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-    }
-  }
-
   delegation {
     name = "fs-delegation"
     service_delegation {
@@ -110,10 +109,33 @@ resource "azurerm_network_security_group" "nsg_app" {
   name                = "nsg-app"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+  security_rule {
+    name                       = "Allow_HTTPS_Inbound_ContainerApps"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "Allow_TCP_Infrastructure_Subnet"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = ["10250", "30000-32767"]
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "*"
+  }
 
   security_rule {
     name                       = "Allow_TCP_8000_From_Web"
-    priority                   = 100
+    priority                   = 120
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -208,11 +230,9 @@ resource "azurerm_container_app_environment" "cae" {
   resource_group_name            = azurerm_resource_group.rg.name
   infrastructure_subnet_id       = azurerm_subnet.snet_app.id
   internal_load_balancer_enabled = false
-  workload_profile {
-    name                  = "Consumption"
-    workload_profile_type = "Consumption"
+  lifecycle {
+    ignore_changes = [infrastructure_resource_group_name, workload_profile]
   }
-
 }
 
 resource "azurerm_container_app" "backend" {
@@ -220,6 +240,7 @@ resource "azurerm_container_app" "backend" {
   container_app_environment_id = azurerm_container_app_environment.cae.id
   resource_group_name          = azurerm_resource_group.rg.name
   revision_mode                = "Single"
+  workload_profile_name = "Consumption"
 
   template {
     min_replicas = 0
