@@ -67,8 +67,28 @@ jobs:
           output_location: ""
 
   healthcheck:
-    name: healthcheck
-    needs: [deploy-backend, deploy-frontend]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "TODO – weryfikacja po wdrożeniu"
+      name: healthcheck
+      needs: [deploy-backend, deploy-frontend]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Backend health
+          run: |
+            for i in $(seq 1 10); do
+              curl -fsS "${{ vars.BACKEND_URL }}/health" && exit 0
+              echo "Próba $i nieudana, czekam 15 s"
+              sleep 15
+            done
+            exit 1
+  
+        - name: Backend version
+          run: |
+            for i in $(seq 1 10); do
+              v=$(curl -fsS "${{ vars.BACKEND_URL }}/version" | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])")
+              echo "Wdrożona: $v, oczekiwana: ${{ github.sha }}"
+              [ "$v" = "${{ github.sha }}" ] && exit 0
+              sleep 15
+            done
+            exit 1
+  
+        - name: Frontend
+          run: curl -fsS -o /dev/null -w "HTTP %{http_code}\n" "${{ vars.FRONTEND_URL }}"
