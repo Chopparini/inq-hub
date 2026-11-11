@@ -8,10 +8,6 @@ from app.core.config import settings
 
 
 class UserRegister(CamelModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [{"username": "jan.kowalski", "email": "jan@example.com", "password": "tajne1234"}]
