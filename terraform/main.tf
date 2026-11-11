@@ -10,7 +10,7 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "rg-terraform-storage"       # Nazwa grupy zasobów dla stanu (utworzona wcześniej)
     storage_account_name = "terraformstoragecalchub"    # UWAGA: Ta nazwa musi być unikalna w całym Azure!
-    container_name       = "tfstate"                  # Nazwa kontenera
+    container_name       = "tfstate"                # Nazwa kontenera
     key                  = "prod.terraform.tfstate"   # Nazwa pliku stanu
   }
 }
@@ -49,12 +49,20 @@ resource "azurerm_subnet" "snet_web" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# Prywatna podsieć dla FastAPI (App)
+# Prywatna podsieć dla Container Apps (App) z delegacją do Microsoft.App/environments
 resource "azurerm_subnet" "snet_app" {
   name                 = "snet-app"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
+
+  delegation {
+    name = "containerapp-delegation"
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 # Prywatna podsieć dla PostgreSQL (DB) z delegacją
@@ -86,46 +94,72 @@ resource "azurerm_network_security_group" "nsg_web" {
   resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
-    name                       = "Allow_HTTP_HTTPS_Internet"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_ranges    = ["80", "443"]
-    source_address_prefix      = "Internet"
-    destination_address_prefix = "*"
+    name                         = "Allow_HTTP_HTTPS_Internet"
+    priority                     = 100
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_ranges      = ["80", "443"]
+    source_address_prefix        = "Internet"
+    destination_address_prefix   = "*"
   }
 }
 
-# 2. NSG dla warstwy App (Prywatna)
+# 2. NSG dla warstwy App (Prywatna) - wymagania dla Container Apps w VNet (m.in. port 443 z Internetu do kontrolera/ingress)
 resource "azurerm_network_security_group" "nsg_app" {
   name                = "nsg-app"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # Wymagany przez ACA: ruch kontrolera / Load Balancera z Internetu na port 443
   security_rule {
-    name                       = "Allow_TCP_8000_From_Web"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8000"
-    source_address_prefix      = "10.0.1.0/24"
-    destination_address_prefix = "*"
+    name                         = "Allow_HTTPS_Inbound_ContainerApps"
+    priority                     = 100
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "443"
+    source_address_prefix        = "Internet"
+    destination_address_prefix   = "*"
+  }
+
+  # Wymagany ruch wewnętrzny podsieci (zgodnie z dokumentacją ACA dla zarządzania środowiskiem)
+  security_rule {
+    name                         = "Allow_TCP_Infrastructure_Subnet"
+    priority                     = 110
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "*"
+    source_port_range            = "*"
+    destination_port_ranges      = ["10250", "30000-32767"]
+    source_address_prefix        = "VirtualNetwork"
+    destination_address_prefix   = "*"
+  }
+
+  security_rule {
+    name                         = "Allow_TCP_8000_From_Web"
+    priority                     = 120
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "8000"
+    source_address_prefix        = "10.0.1.0/24"
+    destination_address_prefix   = "*"
   }
   
   security_rule {
-    name                       = "Deny_All_VirtualNetwork"
-    priority                   = 4000
-    direction                  = "Inbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "VirtualNetwork"
-    destination_address_prefix = "*"
+    name                         = "Deny_All_VirtualNetwork"
+    priority                     = 4000
+    direction                    = "Inbound"
+    access                       = "Deny"
+    protocol                     = "*"
+    source_port_range            = "*"
+    destination_port_range       = "*"
+    source_address_prefix        = "VirtualNetwork"
+    destination_address_prefix   = "*"
   }
 }
 
@@ -136,27 +170,27 @@ resource "azurerm_network_security_group" "nsg_db" {
   resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
-    name                       = "Allow_TCP_5432_From_App"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "5432"
-    source_address_prefix      = "10.0.2.0/24"
-    destination_address_prefix = "*"
+    name                         = "Allow_TCP_5432_From_App"
+    priority                     = 100
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "5432"
+    source_address_prefix        = "10.0.2.0/24"
+    destination_address_prefix   = "*"
   }
 
   security_rule {
-    name                       = "Deny_All_VirtualNetwork"
-    priority                   = 4000
-    direction                  = "Inbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "VirtualNetwork"
-    destination_address_prefix = "*"
+    name                         = "Deny_All_VirtualNetwork"
+    priority                     = 4000
+    direction                    = "Inbound"
+    access                       = "Deny"
+    protocol                     = "*"
+    source_port_range            = "*"
+    destination_port_range       = "*"
+    source_address_prefix        = "VirtualNetwork"
+    destination_address_prefix   = "*"
   }
 }
 
@@ -177,4 +211,111 @@ resource "azurerm_subnet_network_security_group_association" "app_assoc" {
 resource "azurerm_subnet_network_security_group_association" "db_assoc" {
   subnet_id                 = azurerm_subnet.snet_db.id
   network_security_group_id = azurerm_network_security_group.nsg_db.id
+}
+
+
+# FRONTEND: STATIC WEB APPS (Obsługiwany region, np. westeurope)
+
+
+resource "azurerm_static_web_app" "frontend" {
+  name                = "swa-inqhub-frontend"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = "westeurope" # swedencentral nie obsługuje Static Web Apps
+  sku_tier            = "Free"
+  sku_size            = "Free"
+}
+
+
+# BACKEND: CONTAINER APPS ENVIRONMENT & CONTAINER APP
+
+
+resource "azurerm_container_app_environment" "cae" {
+  name                       = "cae-inqhub"
+  location                   = azurerm_resource_group.rg.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  infrastructure_subnet_id   = azurerm_subnet.snet_app.id
+  internal_load_balancer_enabled = false
+}
+
+resource "azurerm_container_app" "backend" {
+  name                         = "ca-inqhub-backend"
+  container_app_environment_id = azurerm_container_app_environment.cae.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  revision_mode                = "Single"
+
+  template {
+    min_replicas = 0
+    max_replicas = 1
+
+    container {
+      name   = "backend"
+      image  = "mcr.microsoft.com/k8se/quickstart:latest"
+      cpu    = "0.25"
+      memory = "0.5Gi"
+
+      # Zmienne środowiskowe mapujące sekrety oraz adres frontendu
+      env {
+        name        = "DATABASE_URL"
+        secret_name = "database-url"
+      }
+
+      env {
+        name        = "SECRET_KEY"
+        secret_name = "jwt-secret"
+      }
+
+      env {
+        name  = "ALLOWED_ORIGINS"
+        value = "https://${azurerm_static_web_app.frontend.default_host_name}"
+      }
+    }
+  }
+
+  ingress {
+    external_enabled           = true
+    target_port                = 8000
+    transport                  = "auto"
+    allow_insecure_connections = false
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
+  }
+
+  secret {
+    name  = "database-url"
+    value = var.database_url
+  }
+
+  secret {
+    name  = "jwt-secret"
+    value = var.jwt_secret
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image
+    ]
+  }
+}
+
+
+# OUTPUTY (Adresy dla GitHub Actions)
+
+
+output "frontend_url" {
+  description = "Adres URL frontendu Static Web Apps"
+  value       = "https://${azurerm_static_web_app.frontend.default_host_name}"
+}
+
+output "backend_url" {
+  description = "Adres URL backendu Container App z prefiksem /api"
+  value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}/api"
+}
+
+output "static_web_app_api_token" {
+  description = "Klucz wdrożeniowy dla Static Web Apps do GitHub Secrets"
+  value       = azurerm_static_web_app.frontend.api_key
+  sensitive   = true
 }
