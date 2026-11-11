@@ -3,17 +3,31 @@ updates:
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: weekly
+      interval: monthly
     target-branch: development
+    open-pull-requests-limit: 1
+    groups:
+      frontend:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: pip
     directory: /backend
     schedule:
-      interval: weekly
+      interval: monthly
     target-branch: development
+    open-pull-requests-limit: 1
+    groups:
+      backend:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     target-branch: development
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ["*"]
