@@ -20,7 +20,7 @@ def root() -> RedirectResponse:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.allowed_origins_list,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -36,6 +36,11 @@ api_router.include_router(products.router)
 def health(db: Session = Depends(get_db)) -> dict[str, str]:
     db.execute(text("SELECT 1"))
     return {"status": "ok", "database": "ok"}
+
+
+@api_router.get("/version", tags=["health"])
+def version() -> dict[str, str]:
+    return {"version": settings.git_sha}
 
 
 app.include_router(api_router)

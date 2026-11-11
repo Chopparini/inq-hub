@@ -28,3 +28,9 @@ def test_invalid_quote_returns_400_with_field_errors():
     body = response.json()
     assert body["detail"] == "Niepoprawne dane wejściowe"
     assert any(error["field"] == "clientId" for error in body["errors"])
+
+
+def test_version_returns_local_by_default():
+    response = client.get("/api/version")
+    assert response.status_code == 200
+    assert response.json() == {"version": "lokalna"}
