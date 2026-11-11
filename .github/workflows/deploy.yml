@@ -40,9 +40,32 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "TODO – wdrożenie frontendu"
- 
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.BACKEND_URL }}
+          VITE_APP_VERSION: ${{ github.sha }}
+      - name: Deploy to Static Web Apps
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: frontend/dist
+          skip_app_build: true
+          output_location: ""
+
   healthcheck:
     name: healthcheck
     needs: [deploy-backend, deploy-frontend]
