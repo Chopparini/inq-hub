@@ -22,6 +22,8 @@ import {
   WifiOff
 } from 'lucide-react';
 
+const x: number = "tekst";
+
 const STATUS_LABELS: Record<QuoteStatus, string> = {
   draft: 'Wersja robocza',
   sent: 'Wysłana',
