@@ -5,13 +5,13 @@ terraform {
       version = "~> 3.0"
     }
   }
-  
+
   # Konfiguracja zdalnego stanu (Remote State) zapobiegająca konfliktom w zespole
   backend "azurerm" {
-    resource_group_name  = "rg-terraform-storage"       # Nazwa grupy zasobów dla stanu (utworzona wcześniej)
-    storage_account_name = "terraformstoragecalchub"    # UWAGA: Ta nazwa musi być unikalna w całym Azure!
-    container_name       = "tfstate"                  # Nazwa kontenera
-    key                  = "prod.terraform.tfstate"   # Nazwa pliku stanu
+    resource_group_name  = "rg-terraform-storage"    # Nazwa grupy zasobów dla stanu (utworzona wcześniej)
+    storage_account_name = "terraformstoragecalchub" # UWAGA: Ta nazwa musi być unikalna w całym Azure!
+    container_name       = "tfstate"                 # Nazwa kontenera
+    key                  = "prod.terraform.tfstate"  # Nazwa pliku stanu
   }
 }
 
@@ -122,7 +122,7 @@ resource "azurerm_network_security_group" "nsg_app" {
     source_address_prefix      = "10.0.1.0/24"
     destination_address_prefix = "*"
   }
-  
+
   security_rule {
     name                       = "Deny_All_VirtualNetwork"
     priority                   = 4000
@@ -203,10 +203,10 @@ resource "azurerm_static_web_app" "frontend" {
 
 
 resource "azurerm_container_app_environment" "cae" {
-  name                       = "cae-inqhub"
-  location                   = azurerm_resource_group.rg.location
-  resource_group_name        = azurerm_resource_group.rg.name
-  infrastructure_subnet_id   = azurerm_subnet.snet_app.id
+  name                           = "cae-inqhub"
+  location                       = azurerm_resource_group.rg.location
+  resource_group_name            = azurerm_resource_group.rg.name
+  infrastructure_subnet_id       = azurerm_subnet.snet_app.id
   internal_load_balancer_enabled = false
   workload_profile {
     name                  = "Consumption"
