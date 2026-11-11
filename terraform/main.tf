@@ -105,12 +105,13 @@ resource "azurerm_network_security_group" "nsg_web" {
 }
 
 # 2. NSG dla warstwy App (Prywatna)
+# Ingress Container Apps wymaga 443 z internetu (backend wołany z przeglądarki)
+#trivy:ignore:AZU-0047
 resource "azurerm_network_security_group" "nsg_app" {
-  # Ingress Container Apps wymaga 443 z internetu (backend wołany z przeglądarki)
-  #trivy:ignore:AZU-0047
   name                = "nsg-app"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+  
   security_rule {
     name                       = "Allow_HTTPS_Inbound_ContainerApps"
     priority                   = 100
