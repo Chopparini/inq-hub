@@ -63,6 +63,13 @@ resource "azurerm_subnet" "snet_db" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.3.0/24"]
+  delegation {
+    name = "aca-delegation"
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 
   delegation {
     name = "fs-delegation"
@@ -201,6 +208,11 @@ resource "azurerm_container_app_environment" "cae" {
   resource_group_name        = azurerm_resource_group.rg.name
   infrastructure_subnet_id   = azurerm_subnet.snet_app.id
   internal_load_balancer_enabled = false
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
+
 }
 
 resource "azurerm_container_app" "backend" {
@@ -267,21 +279,3 @@ resource "azurerm_container_app" "backend" {
 }
 
 
-# OUTPUTY (Adresy dla GitHub Actions)
-
-
-output "frontend_url" {
-  description = "Adres URL frontendu Static Web Apps"
-  value       = "https://${azurerm_static_web_app.frontend.default_host_name}"
-}
-
-output "backend_url" {
-  description = "Adres URL backendu Container App z prefiksem /api"
-  value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}/api"
-}
-
-output "static_web_app_api_token" {
-  description = "Klucz wdrożeniowy dla Static Web Apps do GitHub Secrets"
-  value       = azurerm_static_web_app.frontend.api_key
-  sensitive   = true
-}
