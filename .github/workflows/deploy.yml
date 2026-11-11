@@ -8,14 +8,6 @@ jobs:
     name: deploy-backend
     runs-on: ubuntu-latest
     environment: production
-    steps:
-      - uses: actions/checkout@v4
-      - run: echo "TODO – wdrożenie backendu"
-
-  deploy-backend:
-    name: deploy-backend
-    runs-on: ubuntu-latest
-    environment: production
     env:
       IMAGE: ghcr.io/chopparini/inq-hub-backend:${{ github.sha }}
       RESOURCE_GROUP: rg-wsb-projekt
@@ -42,6 +34,15 @@ jobs:
       - name: Update Container App
         run: az containerapp update --name "$CONTAINER_APP" --resource-group "$RESOURCE_GROUP" --image "$IMAGE"
 
+  deploy-frontend:
+    name: deploy-frontend
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "TODO – wdrożenie frontendu"
+ 
   healthcheck:
     name: healthcheck
     needs: [deploy-backend, deploy-frontend]
