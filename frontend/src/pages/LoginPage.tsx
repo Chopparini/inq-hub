@@ -14,6 +14,7 @@ export default function LoginPage({ onLoggedIn }: LoginPageProps) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,11 +22,18 @@ export default function LoginPage({ onLoggedIn }: LoginPageProps) {
     setMode(next);
     setError(null);
     setPassword('');
+    setPassword2('');
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (mode === 'register' && password !== password2) {
+      setError('Hasła nie są takie same');
+      return;
+    }
+
     setIsLoading(true);
     try {
       if (mode === 'register') {
@@ -94,6 +102,17 @@ export default function LoginPage({ onLoggedIn }: LoginPageProps) {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          {mode === 'register' && (
+            <input
+              className="input"
+              type="password"
+              placeholder="Powtórz hasło"
+              autoComplete="new-password"
+              value={password2}
+              onChange={(e) => setPassword2(e.target.value)}
+              required
+            />
+          )}
 
           {error && (
             <div className="flex items-start gap-2 text-sm text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2">
