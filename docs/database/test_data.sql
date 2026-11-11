@@ -5,8 +5,8 @@
 -- =====================================================================
 
 INSERT INTO users (username, email, hashed_password, role) VALUES
-    ('admin',    'admin@hanka-kartony.pl',    'hash-tylko-do-testow', 'admin'),
-    ('handlowy', 'handlowy@hanka-kartony.pl', 'hash-tylko-do-testow', 'sales');
+    ('admin',    'admin@hanka-kartony.pl',    '$argon2id$v=19$m=65536,t=3,p=4$oqbJcKmagvXSc1o7nUB71g$hv+PnUC7sNWWdMdTt5jwIAHQlaY/T4DW/Eao+JATn/U', 'admin'),
+    ('handlowy', 'handlowy@hanka-kartony.pl', '$argon2id$v=19$m=65536,t=3,p=4$aJFBSUARx/erQfE5NbCu+g$4cFP7qkIUjklNhlacbYWgeFNhTLhUhXnlKzlq1eEhII', 'sales');
 
 INSERT INTO clients (name, nip, email, city) VALUES
     ('Logistyka PL Sp. z o.o.', '5260001234', 'zamowienia@logistykapl.pl', 'Wrocław'),
