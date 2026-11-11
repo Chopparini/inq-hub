@@ -22,5 +22,9 @@ class Settings(BaseSettings):
     def allowed_origins_list(self) -> list[str]:
         return [o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()]
 
+    #id commita, z którego zbudowano obraz
+    git_sha: str = "lokalna" #placeholder
+
+
 
 settings = Settings()
