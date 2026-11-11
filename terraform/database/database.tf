@@ -48,8 +48,8 @@ resource "azurerm_postgresql_flexible_server" "db" {
   # Wpięcie w podsieć prywatną – przy delegated_subnet_id serwer nie ma
   # publicznego endpointu (w providerze azurerm 3.x dostęp publiczny
   # wyłącza się automatycznie, nie ustawiamy go ręcznie)
-  delegated_subnet_id = azurerm_subnet.snet_db.id
-  private_dns_zone_id = azurerm_private_dns_zone.postgres.id
+  delegated_subnet_id           = azurerm_subnet.snet_db.id
+  private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
   public_network_access_enabled = false
 
   administrator_login    = var.db_admin_login
