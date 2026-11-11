@@ -22,6 +22,10 @@ import {
   WifiOff
 } from 'lucide-react';
 
+const APP_VERSION = import.meta.env.VITE_APP_VERSION
+  ? import.meta.env.VITE_APP_VERSION.slice(0, 7)
+  : 'lokalna';
+
 const STATUS_LABELS: Record<QuoteStatus, string> = {
   draft: 'Wersja robocza',
   sent: 'Wysłana',
@@ -416,14 +420,17 @@ export default function App() {
           </nav>
         </div>
 
-        <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-sm text-white">
-            OH
+        <div>
+          <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-sm text-white">
+              OH
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-200 truncate">Olena Hakman</p>
+              <p className="text-xs text-purple-400 truncate">Frontend Dev</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-200 truncate">Olena Hakman</p>
-            <p className="text-xs text-purple-400 truncate">Frontend Dev</p>
-          </div>
+          <p className="mt-3 px-2 text-[11px] text-slate-500">Wersja: {APP_VERSION}</p>
         </div>
       </aside>
 
