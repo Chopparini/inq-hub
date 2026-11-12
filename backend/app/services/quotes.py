@@ -136,6 +136,8 @@ def to_detail(quote: Quote) -> QuoteDetail:
         notes=quote.notes,
         created_at=quote.created_at,
         updated_at=quote.updated_at,
+        created_by_name=quote.creator.display_name if quote.creator else None,
+        updated_by_name=quote.updater.display_name if quote.updater else None,
         items=items,
         total_value=sum((i.line_total for i in items), start=0),
     )

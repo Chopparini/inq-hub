@@ -21,3 +21,8 @@ class User(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def display_name(self) -> str:
+        full = " ".join(filter(None, [self.first_name, self.last_name]))
+        return full or self.username

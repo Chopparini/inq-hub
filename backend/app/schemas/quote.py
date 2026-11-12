@@ -98,5 +98,7 @@ class QuoteDetail(CamelModel):
     notes: str | None
     created_at: datetime
     updated_at: datetime
+    created_by_name: str | None
+    updated_by_name: str | None
     items: list[QuoteItemOut]
     total_value: Money

@@ -877,6 +877,14 @@ export default function App({ user, onLogout }: AppProps) {
                   Data: {formatDate(viewingDetail.quoteDate)}
                   {viewingDetail.validUntil ? ` • Ważna do: ${formatDate(viewingDetail.validUntil)}` : ''}
                 </span>
+                {viewingDetail.createdByName && (
+                  <span className="block text-xs text-slate-500">
+                    Utworzył(a): {viewingDetail.createdByName}
+                    {viewingDetail.updatedByName && viewingDetail.updatedByName !== viewingDetail.createdByName
+                      ? ` • Ostatnia zmiana: ${viewingDetail.updatedByName}`
+                      : ''}
+                  </span>
+                )}
               </div>
               <button onClick={() => setViewingDetail(null)} className="p-1.5 text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
