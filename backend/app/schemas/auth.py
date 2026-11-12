@@ -23,7 +23,6 @@ class UserRegister(CamelModel):
                     "password": "tajne1234",
                 }
             ]
-
         }
     )
 
@@ -43,7 +42,7 @@ class UserOut(CamelModel):
     id: int
     username: str
     first_name: str | None
-    last_name: str | None    
+    last_name: str | None
     email: str
     role: UserRole
 

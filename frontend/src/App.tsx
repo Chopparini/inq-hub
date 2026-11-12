@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { quotesApi, ClientOption, ProductOption } from './api/quotesApi';
 import { QuoteListItem, QuoteDetail, QuoteStatus, QuoteIn } from './types/quote';
-import { User, ROLE_LABELS } from './types/auth';
+import { User, ROLE_LABELS, displayName, initials } from './types/auth';
 import {
   Package,
   FileSpreadsheet,
@@ -430,10 +430,10 @@ export default function App({ user, onLogout }: AppProps) {
         <div>
           <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-sm text-white uppercase">
-              {user.username.slice(0, 2)}
+              {initials(user)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-200 truncate">{user.username}</p>
+              <p className="text-sm font-medium text-slate-200 truncate">{displayName(user)}</p>
               <p className="text-xs text-purple-400 truncate">{ROLE_LABELS[user.role]}</p>
             </div>
             <button

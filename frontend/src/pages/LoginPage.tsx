@@ -12,6 +12,8 @@ interface LoginPageProps {
 export default function LoginPage({ onLoggedIn }: LoginPageProps) {
   const [mode, setMode] = useState<Mode>('login');
   const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
@@ -37,7 +39,7 @@ export default function LoginPage({ onLoggedIn }: LoginPageProps) {
     setIsLoading(true);
     try {
       if (mode === 'register') {
-        await authApi.register({ username, email, password });
+        await authApi.register({ username, firstName, lastName, email, password });
       }
       await authApi.login(username, password);
       onLoggedIn(await authApi.me());
@@ -83,15 +85,35 @@ export default function LoginPage({ onLoggedIn }: LoginPageProps) {
             required
           />
           {mode === 'register' && (
-            <input
-              className="input"
-              type="email"
-              placeholder="E-mail"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  className="input"
+                  placeholder="Imię"
+                  autoComplete="given-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                />
+                <input
+                  className="input"
+                  placeholder="Nazwisko"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
+              </div>
+              <input
+                className="input"
+                type="email"
+                placeholder="E-mail"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </>
           )}
           <input
             className="input"
