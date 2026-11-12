@@ -13,9 +13,14 @@ export function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export const UNAUTHORIZED_EVENT = 'inqhub:unauthorized';
 
 export async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
+    if (response.status === 401) {
+      tokenStorage.clear();
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    }
     let errorDetail = `Błąd serwera (${response.status})`;
     try {
       const errorData = await response.json();

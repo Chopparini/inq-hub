@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import App from './App';
 import LoginPage from './pages/LoginPage';
 import { authApi } from './api/authApi';
-import { tokenStorage } from './api/client';
+import { tokenStorage, UNAUTHORIZED_EVENT } from './api/client';
 import { User } from './types/auth';
 
 export default function AuthGate() {
@@ -19,7 +19,13 @@ export default function AuthGate() {
       .finally(() => setChecking(false));
   }, []);
 
-function handleLogout() {
+  useEffect(() => {
+    const onUnauthorized = () => setUser(null);
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, []);
+
+  function handleLogout() {
     authApi.logout();
     setUser(null);
   }

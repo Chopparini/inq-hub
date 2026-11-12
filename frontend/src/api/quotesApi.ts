@@ -1,5 +1,5 @@
 import { QuoteListItem, QuoteDetail, QuoteIn } from '../types/quote';
-import { API_BASE_URL, handleResponse } from './client';
+import { API_BASE_URL, authHeaders, handleResponse } from './client';
 
 export interface ClientOption {
   id: number;
@@ -17,17 +17,17 @@ export const quotesApi = {
   async getQuotes(): Promise<QuoteListItem[]> {
     // Opóźnienie 800ms dla płynnego stanu ładowania w interfejsie
     await new Promise((r) => setTimeout(r, 800));
-    const res = await fetch(`${API_BASE_URL}/quotes`);
+    const res = await fetch(`${API_BASE_URL}/quotes`, { headers: authHeaders() });
     return handleResponse<QuoteListItem[]>(res);
   },
 
   async getQuote(quoteId: number): Promise<QuoteDetail> {
-    const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`);
+    const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`, { headers: authHeaders() });
     return handleResponse<QuoteDetail>(res);
   },
 
   async getClients(): Promise<ClientOption[]> {
-    const res = await fetch(`${API_BASE_URL}/clients`);
+    const res = await fetch(`${API_BASE_URL}/clients`, { headers: authHeaders() });
     const data = await handleResponse<any>(res);
     const list = Array.isArray(data) ? data : data.items || [];
     return list.map((c: any) => ({
@@ -37,7 +37,7 @@ export const quotesApi = {
   },
 
   async getProducts(): Promise<ProductOption[]> {
-    const res = await fetch(`${API_BASE_URL}/products`);
+    const res = await fetch(`${API_BASE_URL}/products`, { headers: authHeaders() });
     const data = await handleResponse<any>(res);
     const list = Array.isArray(data) ? data : data.items || [];
     return list.map((p: any) => ({
@@ -50,7 +50,7 @@ export const quotesApi = {
   async createQuote(payload: QuoteIn): Promise<QuoteDetail> {
     const res = await fetch(`${API_BASE_URL}/quotes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(payload),
     });
     return handleResponse<QuoteDetail>(res);
@@ -59,7 +59,7 @@ export const quotesApi = {
   async updateQuote(quoteId: number, payload: QuoteIn): Promise<QuoteDetail> {
     const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(payload),
     });
     return handleResponse<QuoteDetail>(res);
@@ -68,6 +68,7 @@ export const quotesApi = {
   async deleteQuote(quoteId: number): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}`, {
       method: 'DELETE',
+      headers: authHeaders(),
     });
     return handleResponse<void>(res);
   },
