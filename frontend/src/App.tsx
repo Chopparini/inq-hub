@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { quotesApi, ClientOption, ProductOption } from './api/quotesApi';
 import { QuoteListItem, QuoteDetail, QuoteStatus, QuoteIn } from './types/quote';
 import { User, ROLE_LABELS, displayName, initials } from './types/auth';
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import ClientsPage from './pages/ClientsPage';
+import SettingsPage from './pages/SettingsPage';
 import {
   Package,
   FileSpreadsheet,
@@ -27,6 +30,11 @@ import {
 const APP_VERSION = import.meta.env.VITE_APP_VERSION
   ? import.meta.env.VITE_APP_VERSION.slice(0, 7)
   : 'lokalna';
+
+const NAV_BASE = 'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition';
+const NAV_ACTIVE = 'bg-gradient-to-r from-purple-600/20 to-sky-600/10 text-white border border-purple-500/40';
+const NAV_IDLE = 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40';
+const navClass = ({ isActive }: { isActive: boolean }) => `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_IDLE}`;
 
 const STATUS_LABELS: Record<QuoteStatus, string> = {
   draft: 'Wersja robocza',
@@ -412,18 +420,18 @@ export default function App({ user, onLogout }: AppProps) {
           </div>
 
           <nav className="space-y-1.5">
-            <button className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-purple-600/20 to-sky-600/10 text-white border border-purple-500/40">
-              <FileSpreadsheet className="w-4 h-4 text-purple-400" />
+            <NavLink to="/wyceny" className={navClass}>
+              <FileSpreadsheet className="w-4 h-4" />
               <span>Wyceny i Oferty</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition">
+            </NavLink>
+            <NavLink to="/klienci" className={navClass}>
               <Building2 className="w-4 h-4" />
               <span>Klienci</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition">
+            </NavLink>
+            <NavLink to="/ustawienia" className={navClass}>
               <Settings className="w-4 h-4" />
               <span>Ustawienia</span>
-            </button>
+            </NavLink>
           </nav>
         </div>
 
@@ -449,6 +457,11 @@ export default function App({ user, onLogout }: AppProps) {
       </aside>
 
       {/* Main Content */}
+      <Routes>
+        <Route path="/klienci" element={<ClientsPage />} />
+        <Route path="/ustawienia" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/wyceny" replace />} />
+        <Route path="/wyceny" element={
       <main className="flex-1 flex flex-col overflow-y-auto bg-gradient-to-b from-[#0b0e14] via-[#0f1422] to-[#0b0e14]">
         <header className="h-18 px-8 border-b border-slate-800/80 flex items-center justify-between sticky top-0 z-10 bg-[#0b0e14]/70 backdrop-blur-md">
           <div className="relative w-96">
@@ -668,6 +681,9 @@ export default function App({ user, onLogout }: AppProps) {
           )}
         </div>
       </main>
+              } />
+      </Routes>
+
 
       {/* MODAL FORMULARZA */}
       {isModalOpen && (
