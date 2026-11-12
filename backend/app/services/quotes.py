@@ -30,14 +30,14 @@ def list_quotes(db: Session) -> list[QuoteListItem]:
     ]
 
 
-def create_quote(db: Session, data: QuoteIn, user_id: int) -> Quote:
+def get_quote(db: Session, quote_id: int) -> Quote:
     quote = db.get(Quote, quote_id)
     if quote is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Wycena o id {quote_id} nie istnieje")
     return quote
 
 
-def create_quote(db: Session, data: QuoteIn) -> Quote:
+def create_quote(db: Session, data: QuoteIn, user_id: int) -> Quote:
     _check_client(db, data.client_id)
     products = _get_products(db, [i.product_id for i in data.items])
 
