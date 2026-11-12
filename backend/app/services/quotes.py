@@ -30,7 +30,7 @@ def list_quotes(db: Session) -> list[QuoteListItem]:
     ]
 
 
-def get_quote(db: Session, quote_id: int) -> Quote:
+def create_quote(db: Session, data: QuoteIn, user_id: int) -> Quote:
     quote = db.get(Quote, quote_id)
     if quote is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Wycena o id {quote_id} nie istnieje")
@@ -47,6 +47,8 @@ def create_quote(db: Session, data: QuoteIn) -> Quote:
         status=data.status,
         valid_until=data.valid_until,
         notes=data.notes,
+        created_by=user_id,
+        updated_by=user_id,
         items=[
             QuoteItem(
                 product_id=i.product_id,
@@ -65,7 +67,7 @@ def create_quote(db: Session, data: QuoteIn) -> Quote:
     return quote
 
 
-def update_quote(db: Session, quote_id: int, data: QuoteIn) -> Quote:
+def update_quote(db: Session, quote_id: int, data: QuoteIn, user_id: int) -> Quote:
     quote = get_quote(db, quote_id)
     _check_client(db, data.client_id)
     products = _get_products(db, [i.product_id for i in data.items])
@@ -74,6 +76,7 @@ def update_quote(db: Session, quote_id: int, data: QuoteIn) -> Quote:
     quote.status = data.status
     quote.valid_until = data.valid_until
     quote.notes = data.notes
+    quote.updated_by = user_id
     if data.quote_date:
         quote.quote_date = data.quote_date
 
