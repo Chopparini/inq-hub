@@ -458,7 +458,7 @@ export default function App({ user, onLogout }: AppProps) {
 
       {/* Main Content */}
       <Routes>
-        <Route path="/klienci" element={<ClientsPage />} />
+        <Route path="/klienci" element={<ClientsPage isAdmin={user.role === 'admin'} />} />
         <Route path="/ustawienia" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/wyceny" replace />} />
         <Route path="/wyceny" element={
