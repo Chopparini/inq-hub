@@ -8,6 +8,7 @@ from app.core.database import Base
 from app.models.client import Client
 from app.models.enums import QuoteStatus, pg_enum
 from app.models.product import Product
+from app.models.user import User
 
 
 class Quote(Base):
@@ -16,8 +17,7 @@ class Quote(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     number: Mapped[str] = mapped_column(String(20), unique=True)
     client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"))
-    # FK do users jest w bazie; model User dojdzie z logowaniem
-    created_by: Mapped[int | None] = mapped_column(Integer)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     status: Mapped[QuoteStatus] = mapped_column(
         pg_enum(QuoteStatus, "quote_status"), server_default=QuoteStatus.DRAFT.value
     )
@@ -28,9 +28,11 @@ class Quote(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    updated_by: Mapped[int | None] = mapped_column(Integer)
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
 
     client: Mapped[Client] = relationship()
+    creator: Mapped[User | None] = relationship(foreign_keys=[created_by])
+    updater: Mapped[User | None] = relationship(foreign_keys=[updated_by])
     items: Mapped[list["QuoteItem"]] = relationship(
         back_populates="quote", cascade="all, delete-orphan", passive_deletes=True
     )

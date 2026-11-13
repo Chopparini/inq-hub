@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from app.core.security import get_current_user
 
 from app.main import app
 
@@ -23,7 +24,11 @@ def test_create_client_without_token_returns_401():
 
 
 def test_invalid_quote_returns_400_with_field_errors():
-    response = client.post("/api/quotes", json={"items": []})
+    app.dependency_overrides[get_current_user] = lambda: None
+    try:
+        response = client.post("/api/quotes", json={"items": []})
+    finally:
+        app.dependency_overrides.clear()
     assert response.status_code == 400
     body = response.json()
     assert body["detail"] == "Niepoprawne dane wejściowe"
@@ -34,3 +39,8 @@ def test_version_returns_local_by_default():
     response = client.get("/api/version")
     assert response.status_code == 200
     assert response.json() == {"version": "lokalna"}
+
+
+def test_quotes_without_token_returns_401():
+    response = client.get("/api/quotes")
+    assert response.status_code == 401

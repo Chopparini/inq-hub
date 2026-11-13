@@ -12,6 +12,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True)
+    first_name: Mapped[str | None] = mapped_column(String(50))
+    last_name: Mapped[str | None] = mapped_column(String(100))
     email: Mapped[str] = mapped_column(String(255), unique=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(
@@ -19,3 +21,8 @@ class User(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def display_name(self) -> str:
+        full = " ".join(filter(None, [self.first_name, self.last_name]))
+        return full or self.username
