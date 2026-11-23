@@ -1,4 +1,5 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const TOKEN_KEY = 'inqhub_token';
 
 export const tokenStorage = {
