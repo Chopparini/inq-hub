@@ -91,6 +91,7 @@ resource "azurerm_network_security_group" "nsg_web" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # Ruch użytkowników do warstwy web: HTTP (przekierowanie) i HTTPS
   security_rule {
     name                       = "Allow_HTTP_HTTPS_Internet"
     priority                   = 100
@@ -111,7 +112,8 @@ resource "azurerm_network_security_group" "nsg_app" {
   name                = "nsg-app"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  
+
+  # Ingress Container Apps: HTTPS z internetu (wymagane przez środowisko)
   security_rule {
     name                       = "Allow_HTTPS_Inbound_ContainerApps"
     priority                   = 100
@@ -124,6 +126,7 @@ resource "azurerm_network_security_group" "nsg_app" {
     destination_address_prefix = "*"
   }
 
+  # Ruch wewnętrzny infrastruktury Container Apps (wymagany przez Azure)
   security_rule {
     name                       = "Allow_TCP_Infrastructure_Subnet"
     priority                   = 110
@@ -136,6 +139,7 @@ resource "azurerm_network_security_group" "nsg_app" {
     destination_address_prefix = "*"
   }
 
+  # Port aplikacji tylko z podsieci web
   security_rule {
     name                       = "Allow_TCP_8000_From_Web"
     priority                   = 120
@@ -148,6 +152,7 @@ resource "azurerm_network_security_group" "nsg_app" {
     destination_address_prefix = "*"
   }
 
+  # Cała reszta ruchu z VNet zablokowana
   security_rule {
     name                       = "Deny_All_VirtualNetwork"
     priority                   = 4000
@@ -167,6 +172,7 @@ resource "azurerm_network_security_group" "nsg_db" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # PostgreSQL wyłącznie z podsieci backendu (snet-app)
   security_rule {
     name                       = "Allow_TCP_5432_From_App"
     priority                   = 100
@@ -179,6 +185,7 @@ resource "azurerm_network_security_group" "nsg_db" {
     destination_address_prefix = "*"
   }
 
+  # Cała reszta ruchu z VNet do bazy zablokowana, w tym z warstwy web
   security_rule {
     name                       = "Deny_All_VirtualNetwork"
     priority                   = 4000
