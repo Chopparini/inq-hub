@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.security import get_current_user
 from app.core.errors import register_error_handlers
 from app.routers import auth, clients, products, quotes
 
@@ -27,8 +28,10 @@ app.add_middleware(
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth.router)
-api_router.include_router(quotes.router)
-api_router.include_router(clients.router)
+protected = [Depends(get_current_user)]
+api_router.include_router(quotes.router, dependencies=protected)
+api_router.include_router(clients.router, dependencies=protected)
+api_router.include_router(products.router, dependencies=protected)
 api_router.include_router(products.router)
 
 

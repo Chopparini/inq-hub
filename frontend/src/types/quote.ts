@@ -60,6 +60,8 @@ export interface QuoteDetail {
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
+  createdByName: string | null;
+  updatedByName: string | null;
   items: QuoteItemOut[];
   totalValue: number;
 }

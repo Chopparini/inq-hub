@@ -23,9 +23,9 @@ az ad sp create --id <APP_ID>
 
 ```bash
 az ad app federated-credential create --id <APP_ID> --parameters '{
-  "name": "gh-production",
+  "name": "gh-production-ids",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:Chopparini/inq-hub:environment:production",
+  "subject": "repo:Chopparini@43728674/inq-hub@1403051110:environment:production",
   "audiences": ["api://AzureADTokenExchange"]
 }'
 ```

@@ -45,7 +45,7 @@ docker compose up -d
 ```
 
 Plik `.env` jest w `.gitignore` – nie commituj go.
-Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql` i `test_data.sql`.
+Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql`, `test_data.sql` (konta) i `seed.sql` (klienci, produkty, wyceny).
 
 ```bash
 docker compose down      # zatrzymanie, dane zostają

@@ -5,6 +5,9 @@ from app.core.database import get_db
 from app.schemas.error import ErrorResponse
 from app.schemas.quote import QuoteDetail, QuoteIn, QuoteListItem
 from app.services import quotes as service
+from app.core.security import get_current_user
+from app.models import User
+
 
 router = APIRouter(
     prefix="/quotes",
@@ -27,13 +30,17 @@ def get_quote(quote_id: int, db: Session = Depends(get_db)) -> QuoteDetail:
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Utworzenie wyceny", responses=BAD_REQUEST)
-def create_quote(data: QuoteIn, db: Session = Depends(get_db)) -> QuoteDetail:
-    return service.to_detail(service.create_quote(db, data))
+def create_quote(
+    data: QuoteIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> QuoteDetail:
+    return service.to_detail(service.create_quote(db, data, user.id))
 
 
 @router.put("/{quote_id}", summary="Aktualizacja wyceny i jej pozycji", responses=BAD_REQUEST | NOT_FOUND)
-def update_quote(quote_id: int, data: QuoteIn, db: Session = Depends(get_db)) -> QuoteDetail:
-    return service.to_detail(service.update_quote(db, quote_id, data))
+def update_quote(
+    quote_id: int, data: QuoteIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> QuoteDetail:
+    return service.to_detail(service.update_quote(db, quote_id, data, user.id))
 
 
 @router.delete(
