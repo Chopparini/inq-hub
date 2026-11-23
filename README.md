@@ -22,6 +22,22 @@ Skład:
 
 ## Deploy
 
+### Baza danych w chmurze
+
+Backend łączy się z bazą jako `inqhub_app`, który może tylko odczytywać i zmieniać dane, bez zmian w strukturze tabel. Połączenie jest szyfrowane (`sslmode=require`). Pełne uprawnienia ma tylko administrator serwera.
+
+Nowa baza wymaga dwóch kroków, oba w kontenerze backendu (baza nie jest dostępna spoza sieci):
+
+1. Tabele i dane startowe, z adresem konta administratora:
+
+   ```bash
+   az containerapp exec --name ca-inqhub-backend --resource-group rg-wsb-projekt \
+     --command "env DATABASE_URL=<adres z kontem administratora> ADMIN_PASSWORD=<hasło> SALES_PASSWORD=<hasło> python -m app.scripts.init_db"
+   ```
+
+2. Użytkownik `inqhub_app`: polecenia z `backend/db/app_user.sql` z własnym, losowym hasłem zamiast `demo123`, wykonane kontem administratora. Hasło trafia do `database_url` w `terraform.tfvars`.
+
+
 ## Uruchomienie lokalne
 
 ```bash
