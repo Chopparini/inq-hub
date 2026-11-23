@@ -40,12 +40,12 @@ cd inq-hub
 Z głównego katalogu repo:
 
 ```bash
-cp .env.example .env   # uzupełnij POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+cp .env.example .env   # uzupełnij POSTGRES_DB (inqhub), POSTGRES_USER, POSTGRES_PASSWORD
 docker compose up -d
 ```
 
 Plik `.env` jest w `.gitignore` – nie commituj go.
-Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql`, `test_data.sql` (konta) i `seed.sql` (klienci, produkty, wyceny).
+Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql`, `test_data.sql` (konta), `seed.sql` (klienci, produkty, wyceny) i `app_user.sql` (użytkownik bazy dla backendu).
 
 ```bash
 docker compose down      # zatrzymanie, dane zostają
@@ -59,6 +59,8 @@ Konta testowe z `test_data.sql`:
 | `admin` | `demo123` | admin |
 | `handlowy` | `demo123` | sales |
 
+Backend łączy się z bazą jako `inqhub_app` (hasło `demo123`), który może tylko odczytywać i zmieniać dane, bez zmian w strukturze tabel. Konto z `POSTGRES_USER` jest właścicielem bazy.
+
 
 ### Backend
 
@@ -69,7 +71,7 @@ cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # uzupełnij DATABASE_URL i SECRET_KEY
+cp .env.example .env   # uzupełnij SECRET_KEY, DATABASE_URL jest gotowy dla lokalnej bazy
 uvicorn app.main:app --reload --port 8000
 ```
 
