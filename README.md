@@ -214,6 +214,35 @@ inq-hub/
 └── README.md
 ```
 
+## Bezpieczeństwo
+
+### Reguły ruchu
+
+| Warstwa | Kierunek | Źródło / cel | Port | Akcja | Uzasadnienie |
+|---|---|---|---|---|---|
+| Web (frontend) | Inbound | Internet | 443 | Allow | jedyny publiczny punkt wejścia |
+| | Inbound | Internet | 80 | przekierowanie | HTTP przekierowany na HTTPS |
+| | Outbound | backend | 80 → 8000 | Allow | nginx przekazuje `/api` do backendu wewnątrz środowiska |
+| App (backend) | Inbound | frontend (środowisko Container Apps) | 8000 | Allow | ingress wewnętrzny |
+| | Inbound | VirtualNetwork | 10250, 30000–32767 | Allow | ruch infrastruktury Container Apps |
+| | Inbound | VirtualNetwork | dowolny | Deny | pozostały ruch z sieci |
+| | Outbound | `snet-db` | 5432 | Allow | połączenie z bazą, TLS 1.2 |
+| DB (PostgreSQL) | Inbound | `snet-app` (10.0.2.0/24) | 5432 | Allow | tylko backend |
+| | Inbound | VirtualNetwork | dowolny | Deny | pozostałe podsieci |
+| | Inbound | Internet | dowolny | Deny | brak publicznego dostępu |
+| | Outbound | – | – | domyślne Azure | baza nie inicjuje połączeń |
+
+
+### Weryfikacja
+
+| Test | Jak sprawdzić | Oczekiwany wynik |
+|---|---|---|
+| Baza niedostępna z internetu | `Test-NetConnection psql-inqhub.postgres.database.azure.com -Port 5432` | brak połączenia albo brak nazwy w DNS |
+| Backend niedostępny z internetu | publiczny adres backendu z `/api/health` | brak odpowiedzi API |
+| Przekierowanie na HTTPS | `curl -I http://<adres frontendu>` | kod przekierowania i `Location: https://...` |
+| Nagłówki bezpieczeństwa | DevTools → Network → Response Headers | `strict-transport-security`, `x-content-type-options`, `x-frame-options`, `referrer-policy` |
+| Zapis danych | dodanie wyceny w aplikacji i odświeżenie strony | wycena widoczna na liście |
+
 ## Architektura
 
 ```mermaid
