@@ -23,17 +23,6 @@ output "subnet_db_id" {
 
 
 output "frontend_url" {
-  description = "Adres URL frontendu Static Web Apps"
-  value       = "https://${azurerm_static_web_app.frontend.default_host_name}"
-}
-
-output "backend_url" {
-  description = "Adres URL backendu Container App z prefiksem /api"
-  value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}/api"
-}
-
-output "static_web_app_api_token" {
-  description = "Klucz wdrożeniowy dla Static Web Apps do GitHub Secrets"
-  value       = azurerm_static_web_app.frontend.api_key
-  sensitive   = true
+  description = "Adres URL frontendu (Container App)"
+  value       = "https://${azurerm_container_app.frontend.ingress[0].fqdn}"
 }
