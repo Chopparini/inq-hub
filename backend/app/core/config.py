@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     #id commita, z którego zbudowano obraz
     git_sha: str = "lokalna" #placeholder
 
+    #poziom logów: DEBUG, INFO, WARNING, ERROR
+    log_level: str = "INFO"
+
 
 
 settings = Settings()

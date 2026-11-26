@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -8,6 +10,7 @@ from app.services import quotes as service
 from app.core.security import get_current_user
 from app.models import User
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/quotes",
@@ -33,7 +36,9 @@ def get_quote(quote_id: int, db: Session = Depends(get_db)) -> QuoteDetail:
 def create_quote(
     data: QuoteIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> QuoteDetail:
-    return service.to_detail(service.create_quote(db, data, user.id))
+    quote = service.create_quote(db, data, user.id)
+    logger.info("Utworzono wycenę id=%s, użytkownik id=%s", quote.id, user.id)
+    return service.to_detail(quote)
 
 
 @router.put("/{quote_id}", summary="Aktualizacja wyceny i jej pozycji", responses=BAD_REQUEST | NOT_FOUND)

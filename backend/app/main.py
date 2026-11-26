@@ -14,6 +14,12 @@ from app.core.security import get_current_user
 from app.core.errors import register_error_handlers
 from app.routers import auth, clients, products, quotes
 
+logging.basicConfig(
+    level=settings.log_level,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+
+
 app = FastAPI(title="inq-hub API", version="0.1.0")
 logger = logging.getLogger(__name__)
 register_error_handlers(app)
