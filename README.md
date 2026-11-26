@@ -22,6 +22,22 @@ Skład:
 
 ## Deploy
 
+### Baza danych w chmurze
+
+Backend łączy się z bazą jako `inqhub_app`, który może tylko odczytywać i zmieniać dane, bez zmian w strukturze tabel. Połączenie jest szyfrowane (`sslmode=require`). Pełne uprawnienia ma tylko administrator serwera.
+
+Nowa baza wymaga dwóch kroków, oba w kontenerze backendu (baza nie jest dostępna spoza sieci):
+
+1. Tabele i dane startowe, z adresem konta administratora:
+
+   ```bash
+   az containerapp exec --name ca-inqhub-backend --resource-group rg-wsb-projekt \
+     --command "env DATABASE_URL=<adres z kontem administratora> ADMIN_PASSWORD=<hasło> SALES_PASSWORD=<hasło> python -m app.scripts.init_db"
+   ```
+
+2. Użytkownik `inqhub_app`: polecenia z `backend/db/app_user.sql` z własnym, losowym hasłem zamiast `demo123`, wykonane kontem administratora. Hasło trafia do `database_url` w `terraform.tfvars`.
+
+
 ## Uruchomienie lokalne
 
 ```bash
@@ -40,12 +56,12 @@ cd inq-hub
 Z głównego katalogu repo:
 
 ```bash
-cp .env.example .env   # uzupełnij POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+cp .env.example .env   # uzupełnij POSTGRES_DB (inqhub), POSTGRES_USER, POSTGRES_PASSWORD
 docker compose up -d
 ```
 
 Plik `.env` jest w `.gitignore` – nie commituj go.
-Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql`, `test_data.sql` (konta) i `seed.sql` (klienci, produkty, wyceny).
+Przy pierwszym starcie Postgres sam wykonuje `backend/db/schema.sql`, `test_data.sql` (konta), `seed.sql` (klienci, produkty, wyceny) i `app_user.sql` (użytkownik bazy dla backendu).
 
 ```bash
 docker compose down      # zatrzymanie, dane zostają
@@ -59,6 +75,8 @@ Konta testowe z `test_data.sql`:
 | `admin` | `demo123` | admin |
 | `handlowy` | `demo123` | sales |
 
+Backend łączy się z bazą jako `inqhub_app` (hasło `demo123`), który może tylko odczytywać i zmieniać dane, bez zmian w strukturze tabel. Konto z `POSTGRES_USER` jest właścicielem bazy.
+
 
 ### Backend
 
@@ -69,7 +87,7 @@ cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # uzupełnij DATABASE_URL i SECRET_KEY
+cp .env.example .env   # uzupełnij SECRET_KEY, DATABASE_URL jest gotowy dla lokalnej bazy
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -195,6 +213,35 @@ inq-hub/
 ├── docker-compose.yml             # lokalna baza danych
 └── README.md
 ```
+
+## Bezpieczeństwo
+
+### Reguły ruchu
+
+| Warstwa | Kierunek | Źródło / cel | Port | Akcja | Uzasadnienie |
+|---|---|---|---|---|---|
+| Web (frontend) | Inbound | Internet | 443 | Allow | jedyny publiczny punkt wejścia |
+| | Inbound | Internet | 80 | przekierowanie | HTTP przekierowany na HTTPS |
+| | Outbound | backend | 80 → 8000 | Allow | nginx przekazuje `/api` do backendu wewnątrz środowiska |
+| App (backend) | Inbound | frontend (środowisko Container Apps) | 8000 | Allow | ingress wewnętrzny |
+| | Inbound | VirtualNetwork | 10250, 30000–32767 | Allow | ruch infrastruktury Container Apps |
+| | Inbound | VirtualNetwork | dowolny | Deny | pozostały ruch z sieci |
+| | Outbound | `snet-db` | 5432 | Allow | połączenie z bazą, TLS 1.2 |
+| DB (PostgreSQL) | Inbound | `snet-app` (10.0.2.0/24) | 5432 | Allow | tylko backend |
+| | Inbound | VirtualNetwork | dowolny | Deny | pozostałe podsieci |
+| | Inbound | Internet | dowolny | Deny | brak publicznego dostępu |
+| | Outbound | – | – | domyślne Azure | baza nie inicjuje połączeń |
+
+
+### Weryfikacja
+
+| Test | Jak sprawdzić | Oczekiwany wynik |
+|---|---|---|
+| Baza niedostępna z internetu | `Test-NetConnection psql-inqhub.postgres.database.azure.com -Port 5432` | brak połączenia albo brak nazwy w DNS |
+| Backend niedostępny z internetu | publiczny adres backendu z `/api/health` | brak odpowiedzi API |
+| Przekierowanie na HTTPS | `curl -I http://<adres frontendu>` | kod przekierowania i `Location: https://...` |
+| Nagłówki bezpieczeństwa | DevTools → Network → Response Headers | `strict-transport-security`, `x-content-type-options`, `x-frame-options`, `referrer-policy` |
+| Zapis danych | dodanie wyceny w aplikacji i odświeżenie strony | wycena widoczna na liście |
 
 ## Architektura
 

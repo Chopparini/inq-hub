@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -7,6 +9,8 @@ from app.models import User
 from app.schemas.auth import UserRegister
 
 DUMMY_HASH = hash_password("dummy-password")
+
+logger = logging.getLogger(__name__)
 
 
 def register_user(db: Session, data: UserRegister) -> User:
@@ -32,6 +36,7 @@ def authenticate(db: Session, username: str, password: str) -> User:
     user = db.scalar(select(User).where(User.username == username))
     password_ok = verify_password(password, user.hashed_password if user else DUMMY_HASH)
     if user is None or not password_ok or not user.is_active:
+        logger.warning("Nieudane logowanie: %s", username)
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             "Nieprawidłowa nazwa użytkownika lub hasło",

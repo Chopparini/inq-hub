@@ -91,6 +91,7 @@ resource "azurerm_network_security_group" "nsg_web" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # Ruch użytkowników do warstwy web: HTTP (przekierowanie) i HTTPS
   security_rule {
     name                       = "Allow_HTTP_HTTPS_Internet"
     priority                   = 100
@@ -105,13 +106,14 @@ resource "azurerm_network_security_group" "nsg_web" {
 }
 
 # 2. NSG dla warstwy App (Prywatna)
-# Ingress Container Apps wymaga 443 z internetu (backend wołany z przeglądarki)
+# Ingress środowiska Container Apps: 443 z internetu, ale publiczny jest tylko frontend; backend przyjmuje ruch wyłącznie z wnętrza środowiska
 #trivy:ignore:AZU-0047
 resource "azurerm_network_security_group" "nsg_app" {
   name                = "nsg-app"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  
+
+  # Ingress Container Apps: HTTPS z internetu (wymagane przez środowisko)
   security_rule {
     name                       = "Allow_HTTPS_Inbound_ContainerApps"
     priority                   = 100
@@ -124,6 +126,7 @@ resource "azurerm_network_security_group" "nsg_app" {
     destination_address_prefix = "*"
   }
 
+  # Ruch wewnętrzny infrastruktury Container Apps (wymagany przez Azure)
   security_rule {
     name                       = "Allow_TCP_Infrastructure_Subnet"
     priority                   = 110
@@ -136,18 +139,7 @@ resource "azurerm_network_security_group" "nsg_app" {
     destination_address_prefix = "*"
   }
 
-  security_rule {
-    name                       = "Allow_TCP_8000_From_Web"
-    priority                   = 120
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8000"
-    source_address_prefix      = "10.0.1.0/24"
-    destination_address_prefix = "*"
-  }
-
+  # Cała reszta ruchu z VNet zablokowana
   security_rule {
     name                       = "Deny_All_VirtualNetwork"
     priority                   = 4000
@@ -167,6 +159,7 @@ resource "azurerm_network_security_group" "nsg_db" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # PostgreSQL wyłącznie z podsieci backendu (snet-app)
   security_rule {
     name                       = "Allow_TCP_5432_From_App"
     priority                   = 100
@@ -179,6 +172,7 @@ resource "azurerm_network_security_group" "nsg_db" {
     destination_address_prefix = "*"
   }
 
+  # Cała reszta ruchu z VNet do bazy zablokowana, w tym z warstwy web
   security_rule {
     name                       = "Deny_All_VirtualNetwork"
     priority                   = 4000
@@ -212,18 +206,6 @@ resource "azurerm_subnet_network_security_group_association" "db_assoc" {
 }
 
 
-# FRONTEND: STATIC WEB APPS (Obsługiwany region, np. westeurope)
-
-
-resource "azurerm_static_web_app" "frontend" {
-  name                = "swa-inqhub-frontend"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = "centralus" # swedencentral nie obsługuje Static Web Apps
-  sku_tier            = "Free"
-  sku_size            = "Free"
-}
-
-
 # BACKEND: CONTAINER APPS ENVIRONMENT & CONTAINER APP
 
 
@@ -243,7 +225,7 @@ resource "azurerm_container_app" "backend" {
   container_app_environment_id = azurerm_container_app_environment.cae.id
   resource_group_name          = azurerm_resource_group.rg.name
   revision_mode                = "Single"
-  workload_profile_name = "Consumption"
+  workload_profile_name        = "Consumption"
 
   template {
     min_replicas = 0
@@ -265,16 +247,11 @@ resource "azurerm_container_app" "backend" {
         name        = "SECRET_KEY"
         secret_name = "jwt-secret"
       }
-
-      env {
-        name  = "ALLOWED_ORIGINS"
-        value = "https://${azurerm_static_web_app.frontend.default_host_name}"
-      }
     }
   }
 
   ingress {
-    external_enabled           = true
+    external_enabled           = false
     target_port                = 8000
     transport                  = "auto"
     allow_insecure_connections = false
@@ -303,3 +280,49 @@ resource "azurerm_container_app" "backend" {
 }
 
 
+# FRONTEND: CONTAINER APP (nginx serwuje aplikację i przekazuje /api do backendu)
+
+resource "azurerm_container_app" "frontend" {
+  name                         = "ca-inqhub-frontend"
+  container_app_environment_id = azurerm_container_app_environment.cae.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  revision_mode                = "Single"
+  workload_profile_name        = "Consumption"
+
+  template {
+    min_replicas = 0
+    max_replicas = 1
+
+    container {
+      name   = "frontend"
+      image  = "mcr.microsoft.com/k8se/quickstart:latest"
+      cpu    = "0.25"
+      memory = "0.5Gi"
+
+      # Adres backendu wewnątrz środowiska Container Apps
+      env {
+        name  = "BACKEND_URL"
+        value = "http://${azurerm_container_app.backend.name}"
+      }
+    }
+  }
+
+  ingress {
+    external_enabled           = true
+    target_port                = 8080
+    transport                  = "auto"
+    allow_insecure_connections = false
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
+  }
+
+  # Obraz podmienia pipeline CD
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image
+    ]
+  }
+}
