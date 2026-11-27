@@ -268,6 +268,28 @@ flowchart LR
 - `main` – stabilna wersja
 - `development` – bieżąca praca, tu trafiają zmiany przed mergem do `main`
 
+
+## Testy
+
+| Rodzaj | Gdzie | Uruchomienie |
+|---|---|---|
+| jednostkowe | `backend/tests` | `cd backend && pytest -v` |
+| API | `backend/tests/test_live_api.py` | `LIVE_APP_URL=http://localhost:8000 pytest tests/test_live_api.py -v` |
+| E2E | `e2e/tests` | `cd e2e && npm ci && npx playwright install --with-deps chromium && npx playwright test` |
+
+Testy API i E2E wymagają działającej aplikacji. Adres podaje `LIVE_APP_URL` (dla E2E domyślnie `http://localhost:5173`), konto `LIVE_USER` i `LIVE_PASSWORD` (domyślnie konto testowe z lokalnej bazy). Bez `LIVE_APP_URL` testy API są pomijane. Na systemach nieobsługiwanych przez Playwright testy E2E można uruchomić w obrazie `mcr.microsoft.com/playwright`.
+
+### Wyniki w CI
+
+Testy jednostkowe idą przy każdym pushu i PR. Po wdrożeniu na `main` job `e2e-tests` uruchamia testy API i E2E na produkcji. Raporty są w przebiegu w Actions → **Artifacts** → `raporty-testow`:
+
+- `backend/test-results/api.xml` – wynik testów API (JUnit)
+- `e2e/playwright-report/index.html` – raport HTML Playwrighta
+- `e2e/test-results/` – przy błędzie screenshot, wideo i trace (`npx playwright show-trace <plik>`)
+
+Czerwony `e2e-tests` przy zielonym `healthcheck` oznacza, że aplikacja działa, ale któraś ścieżka zwraca zły wynik. Zacznij od raportu HTML.
+
+
 ## Monitoring i koszty
 
 | Obszar | Konfiguracja |
