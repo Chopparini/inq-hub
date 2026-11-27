@@ -154,7 +154,7 @@ docker stop inq-hub-frontend && docker rm inq-hub-frontend
 | POST | `/auth/register` | rejestracja, nowe konto ma rolę `sales` | 201, 400, 500 |
 | POST | `/auth/login` | logowanie (formularz `username`, `password`), zwraca token | 200, 400, 401, 500 |
 | GET | `/auth/me` | dane zalogowanego użytkownika, wymaga tokenu | 200, 401, 500 |
-| GET | `/health` | stan serwera i połączenia z bazą | 200, 500 |
+| GET | `/health` | stan serwera i połączenia z bazą | 200, 503 |
 | GET | `/version` | identyfikator commita wdrożonej wersji | 200 |
 | GET | `/quotes` | lista wycen z klientem i sumą | 200, 500 |
 | GET | `/quotes/{id}` | szczegóły wyceny z pozycjami | 200, 400, 404, 500 |
@@ -183,7 +183,6 @@ curl -X POST http://localhost:8000/api/quotes \
   -H "Content-Type: application/json" \
   -d '{"clientId": 2, "items": [{"productId": 1, "quantity": 500}]}'
 ```
-
 
 ## Struktura projektu
 
@@ -268,3 +267,22 @@ flowchart LR
 
 - `main` – stabilna wersja
 - `development` – bieżąca praca, tu trafiają zmiany przed mergem do `main`
+
+## Monitoring i koszty
+
+| Obszar | Konfiguracja |
+|---|---|
+| Budżet | Azure Cost Management, 5 USD/mies., alerty e-mail do zespołu przy 50%, 80% i 100% |
+| Health check | `GET /api/health`: 200 `UP` albo 503 `DOWN` bez bazy; sonda readiness backendu i sprawdzenie po wdrożeniu |
+| Sondy liveness | backend `/api/version` (niezależna od bazy), frontend `/` |
+| Logi | Log Analytics `log-inqhub`, retencja 30 dni, limit 0,5 GB/dzień; backend w `ContainerAppConsoleLogs_CL`, baza w `AzureDiagnostics`; poziom: `LOG_LEVEL` |
+| Dashboard | `inq-hub monitoring` w `rg-wsb-projekt`: żądania wg kodów, czas odpowiedzi, CPU i pamięć, metryki bazy |
+
+Zdarzenia backendu w Log Analytics:
+
+```kusto
+ContainerAppConsoleLogs_CL
+| where ContainerAppName_s == "ca-inqhub-backend"
+| where Log_s has_any ("WARNING", "ERROR")
+| order by TimeGenerated desc
+```
