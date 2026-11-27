@@ -205,9 +205,20 @@ resource "azurerm_subnet_network_security_group_association" "db_assoc" {
   network_security_group_id = azurerm_network_security_group.nsg_db.id
 }
 
+# LOGI: LOG ANALYTICS (aplikacje i baza)
+
+resource "azurerm_log_analytics_workspace" "logs" {
+  name                = "log-inqhub"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+  # Limit dzienny chroni budżet
+  daily_quota_gb = 0.5
+}
+
 
 # BACKEND: CONTAINER APPS ENVIRONMENT & CONTAINER APP
-
 
 resource "azurerm_container_app_environment" "cae" {
   name                           = "cae-inqhub"
@@ -216,8 +227,8 @@ resource "azurerm_container_app_environment" "cae" {
   infrastructure_subnet_id       = azurerm_subnet.snet_app.id
   internal_load_balancer_enabled = false
   lifecycle {
-    ignore_changes = [infrastructure_resource_group_name, workload_profile]
-  }
+    ignore_changes = [infrastructure_resource_group_name, workload_profile, log_analytics_workspace_id]
+      }
 }
 
 resource "azurerm_container_app" "backend" {
@@ -246,6 +257,22 @@ resource "azurerm_container_app" "backend" {
       env {
         name        = "SECRET_KEY"
         secret_name = "jwt-secret"
+      }
+      
+      # Gotowość: bez bazy backend nie dostaje ruchu
+      readiness_probe {
+        transport = "HTTP"
+        port      = 8000
+        path      = "/api/health"
+        timeout   = 5
+        success_count_threshold = 1
+      }
+
+      # Żywotność bez bazy, żeby awaria bazy nie restartowała kontenera
+      liveness_probe {
+        transport = "HTTP"
+        port      = 8000
+        path      = "/api/version"
       }
     }
   }
@@ -303,6 +330,12 @@ resource "azurerm_container_app" "frontend" {
       env {
         name  = "BACKEND_URL"
         value = "http://${azurerm_container_app.backend.name}"
+      }
+      
+      liveness_probe {
+        transport = "HTTP"
+        port      = 8080
+        path      = "/"
       }
     }
   }
