@@ -91,3 +91,54 @@ jobs:
 
       - name: Frontend
         run: curl -fsS -o /dev/null -w "HTTP %{http_code}\n" "${{ vars.FRONTEND_URL }}"
+  e2e-tests:
+    name: e2e-tests
+    needs: healthcheck
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      LIVE_APP_URL: ${{ vars.FRONTEND_URL }}
+      LIVE_USER: ${{ secrets.LIVE_USER }}
+      LIVE_PASSWORD: ${{ secrets.LIVE_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Testy API
+        working-directory: backend
+        run: |
+          pip install pytest httpx
+          pytest tests/test_live_api.py -v --junitxml=test-results/api.xml
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Instalacja Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Testy E2E (headless)
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Raporty testów
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raporty-testow
+          path: |
+            backend/test-results/
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14

@@ -81,6 +81,23 @@ resource "azurerm_postgresql_flexible_server_database" "inqhub" {
 }
 
 
+# LOGI BAZY DO LOG ANALYTICS
+
+resource "azurerm_monitor_diagnostic_setting" "postgres" {
+  name                       = "diag-psql-inqhub"
+  target_resource_id         = azurerm_postgresql_flexible_server.db.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
+
+  enabled_log {
+    category = "PostgreSQLLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
+
+
 # OUTPUTY (bez hasła)
 
 output "db_server_fqdn" {
