@@ -52,4 +52,22 @@ def test_quotes_list_with_token(api, token):
 def test_quotes_without_token_returns_401(api):
     response = api.get("/quotes")
     assert response.status_code == 401
-    
+
+
+def test_create_and_delete_quote(api, token):
+    auth = {"Authorization": f"Bearer {token}"}
+    client_id = api.get("/clients", headers=auth).json()[0]["id"]
+    product_id = api.get("/products", headers=auth).json()[0]["id"]
+
+    response = api.post(
+        "/quotes",
+        headers=auth,
+        json={"clientId": client_id, "notes": "Test API", "items": [{"productId": product_id, "quantity": 100}]},
+    )
+    assert response.status_code == 201
+    assert response.headers["content-type"] == "application/json"
+    quote = response.json()
+    assert isinstance(quote["id"], int)
+    assert quote["number"].startswith("WYC-")
+
+    assert api.delete(f"/quotes/{quote['id']}", headers=auth).status_code == 204
